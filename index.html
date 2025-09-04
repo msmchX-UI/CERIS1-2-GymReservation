@@ -73,37 +73,54 @@
         .then(response => response.text())
         .then(csvText => {
           const data = Papa.parse(csvText, { header: true }).data;
-          // Map to FullCalendar event format (adjusted for new fields)
+          // Map to FullCalendar event format
           return data.map(row => ({
             title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
-            start: row.Date + (row['Time from'] ? 'T' + row['Time from'] : ''),
-            end: row.Date + (row['Time to'] ? 'T' + row['Time to'] : ''),
+            start: row.Date + (row["Time from"] ? "T" + row["Time from"] : ""),
+            end: row.Date + (row["Time to"] ? "T" + row["Time to"] : ""),
             allDay: false
           }));
+        })
+        .catch(err => {
+          console.error("Error fetching events from Google Sheets:", err);
+          return [];
         });
     }
 
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
-      const events = await fetchEvents();
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: events,
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }
+
+      // Always show the calendar, even if events fail to load
+      fetchEvents().then(events => {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          events: events,
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }
+        });
+        calendar.render();
+      }).catch(() => {
+        // Fallback: calendar with no events
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          events: [],
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }
+        });
+        calendar.render();
       });
-      calendar.render();
     });
 
     // Booking form submission (append to Google Sheet via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      // You need to set up a Google Form to accept submissions
-      // Replace this with your Google Form POST URL and field names
-      // const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
+      // Replace with your Google Form POST URL and field entry IDs!
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
       
       const name = this.name.value;
@@ -112,7 +129,7 @@
       const time_from = this.time_from.value;
       const time_to = this.time_to.value;
 
-      // Map to Google Form input names (replace with your field entry IDs)
+      // Replace with your actual Google Form entry IDs!
       const formData = new FormData();
       formData.append("entry.1111111111", name);       // Name
       formData.append("entry.2222222222", event);      // Event
