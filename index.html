@@ -1,51 +1,10 @@
-Skip to content
-Navigation Menu
-msmchX-UI
-CERIS1-2-GymReservation
-
-Type / to search
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-Commit 53ff08b
-msmchX-UI
-msmchX-UI
-authored
-2 hours ago
-·
-·
-Verified
-Add index.html for gym booking calendar
-main
-0 parents  commit 
-53ff08b
-File tree
-Filter files…
-index.html
-1 file changed
-+123
--0
-lines changed
-Search within code
- 
-‎index.html
-+123
-Lines changed: 123 additions & 0 deletions
-Original file line number	Diff line number	Diff line change
-@@ -0,0 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- FullCalendar CSS (for calendar UI) -->
+  <!-- FullCalendar CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <style>
     body {
@@ -94,28 +53,37 @@ Original file line number	Diff line number	Diff line change
     </form>
     <div id="form-msg"></div>
   </div>
+
   <!-- FullCalendar JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- PapaParse for CSV parsing (Google Sheets as CSV) -->
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // Your public Google Sheet published as CSV (replace with your own)
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzvZ3XxSAMPLEID/pub?output=csv";
+    // CSV export link for your Google Sheet responses
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
     
-    // Fetch Google Sheets data and render calendar
     function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
-        .then(response => response.text())
+        .then(response => {
+          if (!response.ok) throw new Error("Sheet not accessible or not public");
+          return response.text();
+        })
         .then(csvText => {
+          // Parse CSV rows
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data.map(row => ({
-            title: row.Name || "Booking",
+            title: row.Name || "Booking", // adjust to your sheet column name
             start: row.Date + (row.Time ? 'T' + row.Time : ''),
             allDay: false
           }));
+        })
+        .catch(err => {
+          console.error("Failed to fetch CSV", err);
+          return []; // Calendar will still render
         });
     }
+
     document.addEventListener('DOMContentLoaded', async function() {
       const calendarEl = document.getElementById('calendar');
       const events = await fetchEvents();
@@ -130,20 +98,21 @@ Original file line number	Diff line number	Diff line change
       });
       calendar.render();
     });
-    // Booking form submission (append to Google Sheet via Google Form)
+
+    // Booking form submission (via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      // You need to set up a Google Form to accept submissions
-      // Replace this with your Google Form POST URL and field names
-      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
+      // Your Google Form POST URL
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
       const name = this.name.value;
       const date = this.date.value;
       const time = this.time.value;
-      // Map to Google Form input names
+      // Replace entry IDs below with the actual ones from your Google Form
       const formData = new FormData();
-      formData.append("entry.1111111111", name); // Replace with your field entry IDs
-      formData.append("entry.2222222222", date);
-      formData.append("entry.3333333333", time);
+      formData.append("entry.1111111111", name); // <-- Replace with actual entry ID for Name
+      formData.append("entry.2222222222", date); // <-- Replace with actual entry ID for Date
+      formData.append("entry.3333333333", time); // <-- Replace with actual entry ID for Time
+
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
         mode: "no-cors",
@@ -158,11 +127,3 @@ Original file line number	Diff line number	Diff line change
   </script>
 </body>
 </html>
-0 commit comments
-Comments
-0
- (0)
-Comment
-You're not receiving notifications from this thread.
-
-Add index.html for gym booking calendar · msmchX-UI/CERIS1-2-GymReservation@53ff08b 
