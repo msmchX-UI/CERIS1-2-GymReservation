@@ -42,12 +42,23 @@
         <input type="text" name="name" required>
       </label><br /><br />
       <label>
+      <label>
+        Event:<br />
+        <input type="text" name="event" required>
+      </label><br /><br />
+      <label>
         Date:<br />
         <input type="date" name="date" required>
       </label><br /><br />
       <label>
-        Time:<br />
-        <input type="time" name="time" required>
+        Time from:<br />
+        <input type="time" name="time from" required>
+      </label><br /><br />
+      <button type="submit">Book Now</button>
+    </form>
+      <label>
+        Time to:<br />
+        <input type="time" name="time to" required>
       </label><br /><br />
       <button type="submit">Book Now</button>
     </form>
@@ -105,13 +116,21 @@
       // Your Google Form POST URL
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
       const name = this.name.value;
-      const date = this.date.value;
-      const time = this.time.value;
+      const event = this.event.value;
+      const [year, month, day] = date.split("-");
+          formData.append("entry.619214382_year", year);
+          formData.append("entry.619214382_month", month);
+          formData.append("entry.619214382_day", day);
+      const [hour, minute] = time_from.split(":");
+          formData.append("entry.295264701_hour", hour);
+          formData.append("entry.295264701_minute", minute);
+      const [hour, minute] = time_to.split(":");
+          formData.append("entry.877971115_hour", hour);
+          formData.append("entry.877971115_minute", minute);
       // Replace entry IDs below with the actual ones from your Google Form
       const formData = new FormData();
-      formData.append("entry.1111111111", name); // <-- Replace with actual entry ID for Name
-      formData.append("entry.2222222222", date); // <-- Replace with actual entry ID for Date
-      formData.append("entry.3333333333", time); // <-- Replace with actual entry ID for Time
+      formData.append("entry.1148333639", name);       // Name
+      formData.append("entry.1062862748", event);      // Event
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
