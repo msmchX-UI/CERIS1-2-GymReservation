@@ -125,6 +125,22 @@
       }).catch(() => {
         document.getElementById('form-msg').textContent = "Error submitting booking.";
       });
+      function fetchEvents() {
+  return fetch(GOOGLE_SHEET_CSV_URL)
+    .then(response => response.text())
+    .then(csvText => {
+      const data = Papa.parse(csvText, { header: true }).data;
+      return data.map(row => ({
+        title: row.Name || "Booking",
+        start: row.Date + (row.Time ? 'T' + row.Time : ''),
+        allDay: false
+      }));
+    })
+    .catch(err => {
+      console.error("Failed to fetch CSV", err);
+      return [];
+    });
+}
     });
   </script>
 </body>
