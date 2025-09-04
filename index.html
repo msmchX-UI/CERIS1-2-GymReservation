@@ -5,7 +5,7 @@
   <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- FullCalendar CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -51,11 +51,11 @@
       </label><br /><br />
       <label>
         Time from:<br />
-        <input type="time" name="time from" required>
+        <input type="time" name="time_from" required>
       </label><br /><br />
       <label>
         Time to:<br />
-        <input type="time" name="time to" required>
+        <input type="time" name="time_to" required>
       </label><br /><br />
       <button type="submit">Book Now</button>
     </form>
@@ -63,7 +63,7 @@
   </div>
 
   <!-- FullCalendar JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
@@ -81,7 +81,6 @@
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data.map(row => {
-            // Combine date and time from/to for start/end
             let start = '';
             let end = '';
             if (row.Date && row["Time from"]) {
@@ -119,7 +118,7 @@
       calendar.render();
     });
 
-// Booking form submission (via Google Form)
+    // Booking form submission (via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
       // Your Google Form POST URL
