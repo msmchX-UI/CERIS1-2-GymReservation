@@ -31,7 +31,7 @@
   </style>
 </head>
 <body>
-  <h1>Booking & Reservation Calendar</h1>
+  <h1>Ceris 1 & 2 Booking and Reservation Calendar</h1>
   <div id="calendar"></div>
   
   <div class="booking-form">
@@ -62,9 +62,7 @@
     // Your public Google Sheet published as CSV (replace with your own)
     // const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzvZ3XxSAMPLEID/pub?output=csv";
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/edit?gid=0#gid=0";
-    
-
-//https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/edit?usp=sharing
+    //https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/edit?usp=sharing
     
     // Fetch Google Sheets data and render calendar
     function fetchEvents() {
@@ -103,13 +101,19 @@
       // Replace this with your Google Form POST URL and field names
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
       const name = this.name.value;
+      const event = this.event.value;
       const date = this.date.value;
-      const time = this.time.value;
+      const time_from = this.time_from.value;
+      const time_to = this.time_to.value;
+
       // Map to Google Form input names
       const formData = new FormData();
-      formData.append("entry.1111111111", name); // Replace with your field entry IDs
-      formData.append("entry.2222222222", date);
-      formData.append("entry.3333333333", time);
+      const formData = new FormData();
+      formData.append("entry.1111111111", name);       // Name
+      formData.append("entry.2222222222", event);      // Event
+      formData.append("entry.3333333333", date);       // Date
+      formData.append("entry.4444444444", time_from);  // Time from
+      formData.append("entry.5555555555", time_to);    // Time to
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
