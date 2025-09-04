@@ -80,11 +80,23 @@
           // Parse CSV rows
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
-          return data.map(row => ({
-            title: row.Name || "Booking", // adjust to your sheet column name
-            start: row.Date + (row.Time ? 'T' + row.Time : ''),
-            allDay: false
-          }));
+          return data.map(row => {
+            // Combine date and time from/to for start/end
+            let start = '';
+            let end = '';
+            if (row.Date && row["Time from"]) {
+              start = row.Date + 'T' + row["Time from"];
+            }
+            if (row.Date && row["Time to"]) {
+              end = row.Date + 'T' + row["Time to"];
+            }
+            return {
+              title: row.Name || "Booking",
+              start: start,
+              end: end,
+              allDay: false
+            };
+          });
         })
         .catch(err => {
           console.error("Failed to fetch CSV", err);
@@ -107,27 +119,35 @@
       calendar.render();
     });
 
-    // Booking form submission (via Google Form)
+// Booking form submission (via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
       // Your Google Form POST URL
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
+
+      // Get field values
       const name = this.name.value;
       const event = this.event.value;
+      const date = this.date.value;        // yyyy-mm-dd
+      const time_from = this.time_from.value; // hh:mm
+      const time_to = this.time_to.value;     // hh:mm
+
+      // Split date and times for Google Form entries
       const [year, month, day] = date.split("-");
-          formData.append("entry.619214382_year", year);
-          formData.append("entry.619214382_month", month);
-          formData.append("entry.619214382_day", day);
-      const [hour, minute] = time_from.split(":");
-          formData.append("entry.295264701_hour", hour);
-          formData.append("entry.295264701_minute", minute);
-      const [hour, minute] = time_to.split(":");
-          formData.append("entry.877971115_hour", hour);
-          formData.append("entry.877971115_minute", minute);
-      // Replace entry IDs below with the actual ones from your Google Form
+      const [from_hour, from_minute] = time_from.split(":");
+      const [to_hour, to_minute] = time_to.split(":");
+
+      // Prepare FormData
       const formData = new FormData();
-      formData.append("entry.1148333639", name);       // Name
-      formData.append("entry.1062862748", event);      // Event
+      formData.append("entry.1148333639", name);             // Name
+      formData.append("entry.1062862748", event);            // Event
+      formData.append("entry.619214382_year", year);         // Date Year
+      formData.append("entry.619214382_month", month);       // Date Month
+      formData.append("entry.619214382_day", day);           // Date Day
+      formData.append("entry.295264701_hour", from_hour);    // Time from Hour
+      formData.append("entry.295264701_minute", from_minute);// Time from Minute
+      formData.append("entry.877971115_hour", to_hour);      // Time to Hour
+      formData.append("entry.877971115_minute", to_minute);  // Time to Minute
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
