@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FullCalendar CSS (for calendar UI) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f3f3f3;
+    }
+    #calendar {
+      background: white;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .booking-form {
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      max-width: 400px;
+      margin: 2em auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Booking & Reservation Calendar</h1>
+  <div id="calendar"></div>
+  
+  <div class="booking-form">
+    <h2>Make a Reservation</h2>
+    <form id="bookingForm">
+      <label>
+        Name:<br />
+        <input type="text" name="name" required>
+      </label><br /><br />
+      <label>
+        Date:<br />
+        <input type="date" name="date" required>
+      </label><br /><br />
+      <label>
+        Time:<br />
+        <input type="time" name="time" required>
+      </label><br /><br />
+      <button type="submit">Book Now</button>
+    </form>
+    <div id="form-msg"></div>
+  </div>
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- PapaParse for CSV parsing (Google Sheets as CSV) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    // Your public Google Sheet published as CSV (replace with your own)
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzvZ3XxSAMPLEID/pub?output=csv";
+    
+    // Fetch Google Sheets data and render calendar
+    function fetchEvents() {
+      return fetch(GOOGLE_SHEET_CSV_URL)
+        .then(response => response.text())
+        .then(csvText => {
+          const data = Papa.parse(csvText, { header: true }).data;
+          // Map to FullCalendar event format
+          return data.map(row => ({
+            title: row.Name || "Booking",
+            start: row.Date + (row.Time ? 'T' + row.Time : ''),
+            allDay: false
+          }));
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+      const calendarEl = document.getElementById('calendar');
+      const events = await fetchEvents();
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: events,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }
+      });
+      calendar.render();
+    });
+
+    // Booking form submission (append to Google Sheet via Google Form)
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // You need to set up a Google Form to accept submissions
+      // Replace this with your Google Form POST URL and field names
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
+      const name = this.name.value;
+      const date = this.date.value;
+      const time = this.time.value;
+      // Map to Google Form input names
+      const formData = new FormData();
+      formData.append("entry.1111111111", name); // Replace with your field entry IDs
+      formData.append("entry.2222222222", date);
+      formData.append("entry.3333333333", time);
+
+      fetch(GOOGLE_FORM_ACTION_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+      }).then(() => {
+        document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
+        this.reset();
+      }).catch(() => {
+        document.getElementById('form-msg').textContent = "Error submitting booking.";
+      });
+    });
+  </script>
+</body>
+</html>
