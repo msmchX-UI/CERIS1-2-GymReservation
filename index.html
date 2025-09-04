@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- FullCalendar CSS (for calendar UI) -->
+  <!-- FullCalendar CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <style>
     body {
@@ -56,26 +56,29 @@
 
   <!-- FullCalendar JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- PapaParse for CSV parsing (Google Sheets as CSV) -->
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // Your public Google Sheet published as CSV (replace with your own)
-    // const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzvZ3XxSAMPLEID/pub?output=csv";
+    // CORRECT CSV export link!
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/export?format=csv&gid=0";
-    //https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/edit?usp=sharing
     
-    // Fetch Google Sheets data and render calendar
     function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
-        .then(response => response.text())
+        .then(response => {
+          if (!response.ok) throw new Error("Sheet not accessible or not public");
+          return response.text();
+        })
         .then(csvText => {
           const data = Papa.parse(csvText, { header: true }).data;
-          // Map to FullCalendar event format
           return data.map(row => ({
             title: row.Name || "Booking",
             start: row.Date + (row.Time ? 'T' + row.Time : ''),
             allDay: false
           }));
+        })
+        .catch(err => {
+          console.error("Failed to fetch CSV", err);
+          return []; // Calendar will still render, but with no events
         });
     }
 
@@ -98,22 +101,16 @@
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
       // You need to set up a Google Form to accept submissions
-      // Replace this with your Google Form POST URL and field names
+      // Replace with your actual Google Form POST URL and entry IDs!
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
       const name = this.name.value;
-      const event = this.event.value;
       const date = this.date.value;
-      const time_from = this.time_from.value;
-      const time_to = this.time_to.value;
-
-      // Map to Google Form input names
+      const time = this.time.value;
+      // Replace entry IDs with your actual Google Form entry IDs!
       const formData = new FormData();
-      const formData = new FormData();
-      formData.append("entry.1111111111", name);       // Name
-      formData.append("entry.2222222222", event);      // Event
-      formData.append("entry.3333333333", date);       // Date
-      formData.append("entry.4444444444", time_from);  // Time from
-      formData.append("entry.5555555555", time_to);    // Time to
+      formData.append("entry.1111111111", name);  // Name
+      formData.append("entry.2222222222", date);  // Date
+      formData.append("entry.3333333333", time);  // Time
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
@@ -125,22 +122,6 @@
       }).catch(() => {
         document.getElementById('form-msg').textContent = "Error submitting booking.";
       });
-      function fetchEvents() {
-  return fetch(GOOGLE_SHEET_CSV_URL)
-    .then(response => response.text())
-    .then(csvText => {
-      const data = Papa.parse(csvText, { header: true }).data;
-      return data.map(row => ({
-        title: row.Name || "Booking",
-        start: row.Date + (row.Time ? 'T' + row.Time : ''),
-        allDay: false
-      }));
-    })
-    .catch(err => {
-      console.error("Failed to fetch CSV", err);
-      return [];
-    });
-}
     });
   </script>
 </body>
