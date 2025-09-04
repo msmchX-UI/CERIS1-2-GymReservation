@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FullCalendar CSS (for calendar UI) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <style>
     body {
@@ -41,31 +42,25 @@
         <input type="text" name="name" required>
       </label><br /><br />
       <label>
-        Event:<br />
-        <input type="text" name="event" required>
-      </label><br /><br />
-      <label>
         Date:<br />
         <input type="date" name="date" required>
       </label><br /><br />
       <label>
-        Time from:<br />
-        <input type="time" name="time_from" required>
-      </label><br /><br />
-      <label>
-        Time to:<br />
-        <input type="time" name="time_to" required>
+        Time:<br />
+        <input type="time" name="time" required>
       </label><br /><br />
       <button type="submit">Book Now</button>
     </form>
     <div id="form-msg"></div>
   </div>
 
+  <!-- FullCalendar JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- PapaParse for CSV parsing (Google Sheets as CSV) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // Use the correct CSV export URL from your Google Sheet
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1mx5a0S-pUtMO7x0FcqH7QFEiUL53eTaWWA8sIOsudzQ/export?format=csv&gid=0";
+    // Your public Google Sheet published as CSV (replace with your own)
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzvZ3XxSAMPLEID/pub?output=csv";
     
     // Fetch Google Sheets data and render calendar
     function fetchEvents() {
@@ -75,67 +70,42 @@
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data.map(row => ({
-            title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
-            start: row.Date + (row["Time from"] ? "T" + row["Time from"] : ""),
-            end: row.Date + (row["Time to"] ? "T" + row["Time to"] : ""),
+            title: row.Name || "Booking",
+            start: row.Date + (row.Time ? 'T' + row.Time : ''),
             allDay: false
           }));
-        })
-        .catch(err => {
-          console.error("Error fetching events from Google Sheets:", err);
-          return [];
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       const calendarEl = document.getElementById('calendar');
-
-      // Always show the calendar, even if events fail to load
-      fetchEvents().then(events => {
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          events: events,
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }
-        });
-        calendar.render();
-      }).catch(() => {
-        // Fallback: calendar with no events
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          events: [],
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }
-        });
-        calendar.render();
+      const events = await fetchEvents();
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: events,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }
       });
+      calendar.render();
     });
 
     // Booking form submission (append to Google Sheet via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      // Replace with your Google Form POST URL and field entry IDs!
-      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
-      
+      // You need to set up a Google Form to accept submissions
+      // Replace this with your Google Form POST URL and field names
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/YOUR_FORM_ID/formResponse";
       const name = this.name.value;
-      const event = this.event.value;
       const date = this.date.value;
-      const time_from = this.time_from.value;
-      const time_to = this.time_to.value;
-
-      // Replace with your actual Google Form entry IDs!
+      const time = this.time.value;
+      // Map to Google Form input names
       const formData = new FormData();
-      formData.append("entry.1111111111", name);       // Name
-      formData.append("entry.2222222222", event);      // Event
-      formData.append("entry.3333333333", date);       // Date
-      formData.append("entry.4444444444", time_from);  // Time from
-      formData.append("entry.5555555555", time_to);    // Time to
+      formData.append("entry.1111111111", name); // Replace with your field entry IDs
+      formData.append("entry.2222222222", date);
+      formData.append("entry.3333333333", time);
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
