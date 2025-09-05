@@ -5,7 +5,6 @@
   <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- FullCalendar CSS -->
-<!--  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css"> -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <style>
     body {
@@ -68,9 +67,9 @@
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // CSV export link for your Google Sheet responses
-//    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/<your-sheet-id>/export?format=csv&gid=<tab-gid>";
+    // Set the Google Sheet CSV export URL for your responses tab
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
+    
     function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
@@ -81,22 +80,24 @@
           // Parse CSV rows
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
-          return data.map(row => {
-            let start = '';
-            let end = '';
-            if (row.Date && row["Time from"]) {
-              start = row.Date + 'T' + row["Time from"];
-            }
-            if (row.Date && row["Time to"]) {
-              end = row.Date + 'T' + row["Time to"];
-            }
-            return {
-              title: row.Name || "Booking",
-              start: start,
-              end: end,
-              allDay: false
-            };
-          });
+          return data
+            .filter(row => row.Date && row["Time from"]) // Only show rows with a date and time
+            .map(row => {
+              let start = '';
+              let end = '';
+              if (row.Date && row["Time from"]) {
+                start = row.Date + 'T' + row["Time from"];
+              }
+              if (row.Date && row["Time to"]) {
+                end = row.Date + 'T' + row["Time to"];
+              }
+              return {
+                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
+                start: start,
+                end: end,
+                allDay: false
+              };
+            });
         })
         .catch(err => {
           console.error("Failed to fetch CSV", err);
@@ -122,7 +123,7 @@
     // Booking form submission (via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      // Your Google Form POST URL
+      // Your Google Form POST URL (replace with your actual formResponse URL)
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       // Get field values
@@ -139,6 +140,7 @@
 
       // Prepare FormData
       const formData = new FormData();
+      // IMPORTANT: Replace entry IDs below with those from your actual Google Form!
       formData.append("entry.1148333639", name);             // Name
       formData.append("entry.1062862748", event);            // Event
       formData.append("entry.619214382_year", year);         // Date Year
