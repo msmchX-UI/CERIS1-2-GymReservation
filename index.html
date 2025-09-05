@@ -115,56 +115,50 @@
     });
 
     // Booking form submission (via Google Form)
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      // Your Google Form POST URL (replace with your actual formResponse URL)
-      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
+document.getElementById('bookingForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
-      // Get field values
-      const name = this.name.value;
-      const event = this.event.value;
-      const date = this.date.value; // yyyy-mm-dd
-      const time_from = this.time_from.value; // hh:mm (24hr)
-      const time_to = this.time_to.value;     // hh:mm (24hr)
+  const name = this.name.value;
+  const event = this.event.value;
+  const date = this.date.value;
+  const time_from = this.time_from.value;
+  const time_to = this.time_to.value;
 
-      // Split time and convert to AM/PM
-      function to12h(time) {
-        let [h, m] = time.split(":").map(Number);
-        let ampm = h >= 12 ? "PM" : "AM";
-        h = h % 12;
-        if (h === 0) h = 12;
-        return { hour: h, minute: m, ampm };
-      }
-      const tFrom = to12h(time_from);
-      const tTo = to12h(time_to);      
-      const formData = new FormData();
-      
-      // Prepare FormData
-      formData.append("entry.1148333639", name);        // Name
-      formData.append("entry.1062862748", event);       // Event
-      formData.append("entry.619214382", date);         // Date (single field, not split)
-      // formData.append("entry.295264701", time_from);    // Time from (single field)
-      // formData.append("entry.877971115", time_to);      // Time to (single field)
+  // Split time and convert to AM/PM
+  function to12h(time) {
+    let [h, m] = time.split(":").map(Number);
+    let ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    return { hour: h, minute: m, ampm };
+  }
+  const tFrom = to12h(time_from);
+  const tTo = to12h(time_to);
 
-      formData.append("entry.295264701_hour", tFrom.hour);
-      formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
-      formData.append("entry.295264701_ampm", tFrom.ampm);
-      formData.append("entry.877971115_hour", tTo.hour);
-      formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
-      formData.append("entry.877971115_ampm", tTo.ampm);
-      
+  // Declare the FormData before appending!
+  const formData = new FormData();
+  formData.append("entry.1148333639", name);        // Name
+  formData.append("entry.1062862748", event);       // Event
+  formData.append("entry.619214382", date);         // Date (single field, not split)
+  formData.append("entry.295264701_hour", tFrom.hour);
+  formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
+  formData.append("entry.295264701_ampm", tFrom.ampm);
+  formData.append("entry.877971115_hour", tTo.hour);
+  formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
+  formData.append("entry.877971115_ampm", tTo.ampm);
 
-      fetch(GOOGLE_FORM_ACTION_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-      }).then(() => {
-        document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
-        this.reset();
-      }).catch(() => {
-        document.getElementById('form-msg').textContent = "Error submitting booking.";
-      });
-    });
+  fetch(GOOGLE_FORM_ACTION_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: formData
+  }).then(() => {
+    document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
+    this.reset();
+  }).catch(() => {
+    document.getElementById('form-msg').textContent = "Error submitting booking.";
+  });
+});
   </script>
 </body>
 </html>
