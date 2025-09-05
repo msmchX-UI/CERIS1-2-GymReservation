@@ -133,8 +133,12 @@
       const time_from = this.time_from.value; // hh:mm
       const time_to = this.time_to.value;     // hh:mm
 
-      // Split date and times for Google Form entries
-      const [year, month, day] = date.split("-");
+      // Non Split date 
+      const date = this.date.value;
+      
+      // Split date for Google Form entries
+      // const [year, month, day] = date.split("-");
+      
       const [from_hour, from_minute] = time_from.split(":");
       const [to_hour, to_minute] = time_to.split(":");
 
@@ -143,13 +147,22 @@
       // IMPORTANT: Replace entry IDs below with those from your actual Google Form!
       formData.append("entry.1148333639", name);             // Name
       formData.append("entry.1062862748", event);            // Event
-      formData.append("entry.619214382_year", year);         // Date Year
-      formData.append("entry.619214382_month", month);       // Date Month
-      formData.append("entry.619214382_day", day);           // Date Day
-      formData.append("entry.295264701_hour", from_hour);    // Time from Hour
-      formData.append("entry.295264701_minute", from_minute);// Time from Minute
+      
+      // Non Split date 
+      // formData.append("entry.619214382", date);         // Date 
+
+      // Split date for Google Form entries
+      // formData.append("entry.619214382_year", year);         // Date Year
+      // formData.append("entry.619214382_month", month);       // Date Month
+      // formData.append("entry.619214382_day", day);           // Date Day
+      
+      formData.append("entry.295264701_hour", from_hour);      // Time from Hour
+      formData.append("entry.295264701_minute", from_minute);  // Time from Minute
+      formData.append("entry.295264701_minute", ampm);        // ampm
       formData.append("entry.877971115_hour", to_hour);      // Time to Hour
       formData.append("entry.877971115_minute", to_minute);  // Time to Minute
+      formData.append("entry.877971115_minute", ampm);      // ampm
+
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
