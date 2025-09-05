@@ -127,15 +127,31 @@
       const time_from = this.time_from.value; // hh:mm (24hr)
       const time_to = this.time_to.value;     // hh:mm (24hr)
 
+      // Split time and convert to AM/PM
+      function to12h(time) {
+        let [h, m] = time.split(":").map(Number);
+        let ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12;
+        if (h === 0) h = 12;
+        return { hour: h, minute: m, ampm };
+      }
+      const tFrom = to12h(time_from);
+      const tTo = to12h(time_to);      
+      
       // Prepare FormData
-      // IMPORTANT: Replace these entry IDs with your Google Form's actual entry IDs!
-      const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
       formData.append("entry.1062862748", event);       // Event
       formData.append("entry.619214382", date);         // Date (single field, not split)
-      formData.append("entry.295264701", time_from);    // Time from (single field)
-      formData.append("entry.877971115", time_to);      // Time to (single field)
+      // formData.append("entry.295264701", time_from);    // Time from (single field)
+      // formData.append("entry.877971115", time_to);      // Time to (single field)
 
+      formData.append("entry.295264701_hour", tFrom.hour);
+      formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
+      formData.append("entry.295264701_ampm", tFrom.ampm);
+      formData.append("entry.877971115_hour", tTo.hour);
+      formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
+      formData.append("entry.877971115_ampm", tTo.ampm);
+      
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
