@@ -62,14 +62,29 @@
     <div id="form-msg"></div>
   </div>
 
-  <!-- FullCalendar JS -->
-  <script src="https:///npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- FullCalendar JS (correct version) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <!-- PapaParse for CSV parsing -->
-  <script src="https:///npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
-    
+
+    // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
+    function toISODate(dateString, timeString) {
+      if (!dateString || !timeString) return null;
+      const [month, day, year] = dateString.split('/');
+      let [time, ampm] = timeString.trim().split(' ');
+      let [hour, minute, second] = time.split(':');
+      hour = parseInt(hour, 10);
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      hour = hour.toString().padStart(2, '0');
+      minute = minute.padStart(2, '0');
+      second = second ? second.padStart(2, '0') : '00';
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
+    }
+
     function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
@@ -81,10 +96,11 @@
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data
-            .filter(row => row.Date && row["Time from"]) // Only rows with date and time
+            .filter(row => row.Date && row["Time from"])
             .map(row => {
-              let start = row.Date + 'T' + row["Time from"];
-              let end = row.Date && row["Time to"] ? row.Date + 'T' + row["Time to"] : null;
+              let start = toISODate(row.Date, row["Time from"]);
+              // 'Time' column in your Sheet is actually the 'Time to'
+              let end = row.Date && row["Time"] ? toISODate(row.Date, row["Time"]) : null;
               return {
                 title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
                 start: start,
@@ -102,7 +118,7 @@
     document.addEventListener('DOMContentLoaded', async function() {
       const calendarEl = document.getElementById('calendar');
       const events = await fetchEvents();
-      const calendar = new FullCalendar.Calendar(calendarEl, {
+      const calendar = new window.FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         events: events,
         headerToolbar: {
@@ -115,50 +131,51 @@
     });
 
     // Booking form submission (via Google Form)
-document.getElementById('bookingForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Your Google Form POST URL (replace with your actual formResponse URL)
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
-  const name = this.name.value;
-  const event = this.event.value;
-  const date = this.date.value;
-  const time_from = this.time_from.value;
-  const time_to = this.time_to.value;
+      // Get field values
+      const name = this.name.value;
+      const event = this.event.value;
+      const date = this.date.value; // yyyy-mm-dd
+      const time_from = this.time_from.value;
+      const time_to = this.time_to.value;
 
-  // Split time and convert to AM/PM
-  function to12h(time) {
-    let [h, m] = time.split(":").map(Number);
-    let ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12;
-    if (h === 0) h = 12;
-    return { hour: h, minute: m, ampm };
-  }
-  const tFrom = to12h(time_from);
-  const tTo = to12h(time_to);
+      // Split time and convert to AM/PM for Google Forms
+      function to12h(time) {
+        let [h, m] = time.split(":").map(Number);
+        let ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12;
+        if (h === 0) h = 12;
+        return { hour: h, minute: m, ampm };
+      }
+      const tFrom = to12h(time_from);
+      const tTo = to12h(time_to);
 
-  // Declare the FormData before appending!
-  const formData = new FormData();
-  formData.append("entry.1148333639", name);        // Name
-  formData.append("entry.1062862748", event);       // Event
-  formData.append("entry.619214382", date);         // Date (single field, not split)
-  formData.append("entry.295264701_hour", tFrom.hour);
-  formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
-  formData.append("entry.295264701_ampm", tFrom.ampm);
-  formData.append("entry.877971115_hour", tTo.hour);
-  formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
-  formData.append("entry.877971115_ampm", tTo.ampm);
+      const formData = new FormData();
+      formData.append("entry.1148333639", name);        // Name
+      formData.append("entry.1062862748", event);       // Event
+      formData.append("entry.619214382", date);         // Date (single field, yyyy-mm-dd)
+      formData.append("entry.295264701_hour", tFrom.hour);
+      formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
+      formData.append("entry.295264701_ampm", tFrom.ampm);
+      formData.append("entry.877971115_hour", tTo.hour);
+      formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
+      formData.append("entry.877971115_ampm", tTo.ampm);
 
-  fetch(GOOGLE_FORM_ACTION_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: formData
-  }).then(() => {
-    document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
-    this.reset();
-  }).catch(() => {
-    document.getElementById('form-msg').textContent = "Error submitting booking.";
-  });
-});
+      fetch(GOOGLE_FORM_ACTION_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+      }).then(() => {
+        document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
+        this.reset();
+      }).catch(() => {
+        document.getElementById('form-msg').textContent = "Error submitting booking.";
+      });
+    });
   </script>
 </body>
 </html>
