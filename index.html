@@ -81,16 +81,10 @@
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data
-            .filter(row => row.Date && row["Time from"]) // Only show rows with a date and time
+            .filter(row => row.Date && row["Time from"]) // Only rows with date and time
             .map(row => {
-              let start = '';
-              let end = '';
-              if (row.Date && row["Time from"]) {
-                start = row.Date + 'T' + row["Time from"];
-              }
-              if (row.Date && row["Time to"]) {
-                end = row.Date + 'T' + row["Time to"];
-              }
+              let start = row.Date + 'T' + row["Time from"];
+              let end = row.Date && row["Time to"] ? row.Date + 'T' + row["Time to"] : null;
               return {
                 title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
                 start: start,
@@ -101,7 +95,7 @@
         })
         .catch(err => {
           console.error("Failed to fetch CSV", err);
-          return []; // Calendar will still render
+          return [];
         });
     }
 
@@ -129,39 +123,18 @@
       // Get field values
       const name = this.name.value;
       const event = this.event.value;
-      const date = this.date.value;        // yyyy-mm-dd
-      const time_from = this.time_from.value; // hh:mm
-      const time_to = this.time_to.value;     // hh:mm
-
-      // Non Split date 
-      const date = this.date.value;
-      
-      // Split date for Google Form entries
-      // const [year, month, day] = date.split("-");
-      
-      const [from_hour, from_minute] = time_from.split(":");
-      const [to_hour, to_minute] = time_to.split(":");
+      const date = this.date.value; // yyyy-mm-dd
+      const time_from = this.time_from.value; // hh:mm (24hr)
+      const time_to = this.time_to.value;     // hh:mm (24hr)
 
       // Prepare FormData
+      // IMPORTANT: Replace these entry IDs with your Google Form's actual entry IDs!
       const formData = new FormData();
-      // IMPORTANT: Replace entry IDs below with those from your actual Google Form!
-      formData.append("entry.1148333639", name);             // Name
-      formData.append("entry.1062862748", event);            // Event
-      
-      // Non Split date 
-      // formData.append("entry.619214382", date);         // Date 
-
-      // Split date for Google Form entries
-      // formData.append("entry.619214382_year", year);         // Date Year
-      // formData.append("entry.619214382_month", month);       // Date Month
-      // formData.append("entry.619214382_day", day);           // Date Day
-      
-      formData.append("entry.295264701_hour", from_hour);      // Time from Hour
-      formData.append("entry.295264701_minute", from_minute);  // Time from Minute
-      formData.append("entry.295264701_minute", ampm);        // ampm
-      formData.append("entry.877971115_hour", to_hour);      // Time to Hour
-      formData.append("entry.877971115_minute", to_minute);  // Time to Minute
-      formData.append("entry.877971115_minute", ampm);      // ampm
+      formData.append("entry.1148333639", name);        // Name
+      formData.append("entry.1062862748", event);       // Event
+      formData.append("entry.619214382", date);         // Date (single field, not split)
+      formData.append("entry.295264701", time_from);    // Time from (single field)
+      formData.append("entry.877971115", time_to);      // Time to (single field)
 
 
       fetch(GOOGLE_FORM_ACTION_URL, {
