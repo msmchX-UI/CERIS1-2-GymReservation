@@ -27,29 +27,26 @@
       margin: 2em auto;
     }
   </style>
+  <meta charset="UTF-8">
+  <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
 </head>
 <body>
   <!-- Logo section -->
   <img 
-  id="logo" 
-  src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
-  alt="CERIS Homeowners Association Logo" 
-  style="
-    display: block; 
-    margin: 0 auto 1em auto; 
-    width: 180px; 
-    height: 120px; 
-    object-fit: cover; 
-    border-radius: 8px;
-  "
+    id="logo" 
+    src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
+    alt="CERIS Homeowners Association Logo" 
+    style="
+      display: block; 
+      margin: 0 auto 1em auto; 
+      width: 180px; 
+      height: 120px; 
+      object-fit: cover; 
+      border-radius: 8px;
+    "
   />
-    
-    <meta charset="UTF-8">
-  <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
-  <body>
+
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
-  <!-- other content -->
-</body>
 
   <div id="calendar"></div>
   
@@ -78,7 +75,7 @@
       </label><br /><br />
       <button type="submit">Book Now</button>
     </form>
-    <div id="form-msg"></div>
+    <div id="form-msg" style="color:red; margin-top:1em;"></div>
   </div>
 
   <!-- FullCalendar JS (correct version) -->
@@ -92,19 +89,27 @@
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
       if (!dateString || !timeString) return null;
-      const [month, day, year] = dateString.split('/');
+      // Accepts either 'yyyy-mm-dd' or 'm/d/yyyy'
+      let year, month, day;
+      if (dateString.includes('-')) {
+        [year, month, day] = dateString.split('-');
+      } else {
+        [month, day, year] = dateString.split('/');
+      }
+      // If timeString is '08:00:00 AM' or '08:00 AM'
       let [time, ampm] = timeString.trim().split(' ');
       let [hour, minute, second] = time.split(':');
       hour = parseInt(hour, 10);
       if (ampm === 'PM' && hour !== 12) hour += 12;
       if (ampm === 'AM' && hour === 12) hour = 0;
       hour = hour.toString().padStart(2, '0');
-      minute = minute.padStart(2, '0');
+      minute = minute ? minute.padStart(2, '0') : '00';
       second = second ? second.padStart(2, '0') : '00';
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
     }
 
-    function fetchEvents() {
+    // Used for FullCalendar events
+    async function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
           if (!response.ok) throw new Error("Sheet not accessible or not public");
@@ -115,16 +120,24 @@
           const data = Papa.parse(csvText, { header: true }).data;
           // Map to FullCalendar event format
           return data
-            .filter(row => row.Date && row["Time from"])
+            .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
             .map(row => {
-              let start = toISODate(row.Date, row["Time from"]);
-              // 'Time' column in your Sheet is actually the 'Time to'
-              let end = row.Date && row["Time"] ? toISODate(row.Date, row["Time"]) : null;
+              let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
+                // convert m/d/yyyy to yyyy-mm-dd
+                return `${m3}-${m1.padStart(2, '0')}-${m2.padStart(2, '0')}`;
+              });
+              let start = row["Time from"]
+                ? toISODate(row.Date, row["Time from"])
+                : null;
+              let end = (row.Date && row["Time"])
+                ? toISODate(row.Date, row["Time"])
+                : null;
+              // fallback to allDay if time missing
               return {
                 title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
-                start: start,
+                start: start || dateStr,
                 end: end,
-                allDay: false
+                allDay: !start
               };
             });
         })
@@ -134,12 +147,34 @@
         });
     }
 
+    // Overlap detection function
+    function isOverlap(date, from, to, events) {
+      // date: yyyy-mm-dd, time: hh:mm (24h)
+      const reqStart = new Date(`${date}T${from}`);
+      const reqEnd = new Date(`${date}T${to}`);
+      for (const ev of events) {
+        // Only check if dates match (ev.start like 2025-09-05T08:00:00)
+        if (!ev.start || !ev.end) continue;
+        if (!ev.start.startsWith(date)) continue;
+        const evStart = new Date(ev.start);
+        const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
+        // Overlap if (startA < endB) && (endA > startB)
+        if (reqStart < evEnd && reqEnd > evStart) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Keep a reference to latest events for validation
+    let latestEvents = [];
+
     document.addEventListener('DOMContentLoaded', async function() {
       const calendarEl = document.getElementById('calendar');
-      const events = await fetchEvents();
+      latestEvents = await fetchEvents();
       const calendar = new window.FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        events: events,
+        events: latestEvents,
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
@@ -150,17 +185,39 @@
     });
 
     // Booking form submission (via Google Form)
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      // Your Google Form POST URL (replace with your actual formResponse URL)
-      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
+      const formMsg = document.getElementById('form-msg');
+      formMsg.style.color = "red";
+      formMsg.textContent = "Checking for schedule conflicts...";
 
       // Get field values
-      const name = this.name.value;
-      const event = this.event.value;
+      const name = this.name.value.trim();
+      const event = this.event.value.trim();
       const date = this.date.value; // yyyy-mm-dd
       const time_from = this.time_from.value;
       const time_to = this.time_to.value;
+
+      // If form is incomplete
+      if (!name || !event || !date || !time_from || !time_to) {
+        formMsg.textContent = "Please fill out all fields.";
+        return;
+      }
+
+      // Always fetch latest events just before submission
+      let events;
+      try {
+        events = await fetchEvents();
+      } catch {
+        formMsg.textContent = "Could not check schedule. Try again later.";
+        return;
+      }
+
+      // Overlap check
+      if (isOverlap(date, time_from, time_to, events)) {
+        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
+        return; // Prevent submission
+      }
 
       // Split time and convert to AM/PM for Google Forms
       function to12h(time) {
@@ -172,6 +229,9 @@
       }
       const tFrom = to12h(time_from);
       const tTo = to12h(time_to);
+
+      // Your Google Form POST URL (replace with your actual formResponse URL)
+      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
@@ -189,10 +249,11 @@
         mode: "no-cors",
         body: formData
       }).then(() => {
-        document.getElementById('form-msg').textContent = "Booking submitted! Please refresh calendar after a minute.";
+        formMsg.style.color = "green";
+        formMsg.textContent = "Booking submitted! Please refresh calendar after a minute.";
         this.reset();
       }).catch(() => {
-        document.getElementById('form-msg').textContent = "Error submitting booking.";
+        formMsg.textContent = "Error submitting booking.";
       });
     });
   </script>
