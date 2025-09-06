@@ -210,39 +210,36 @@
     });
 
     // Booking form submission (via Google Form)
-    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const formMsg = document.getElementById('form-msg');
-      formMsg.style.color = "red";
-      formMsg.textContent = "Checking for schedule conflicts...";
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const formMsg = document.getElementById('form-msg');
+  formMsg.style.color = "red";
+  formMsg.textContent = "Checking for schedule conflicts...";
 
-      // Get field values
-      const name = this.name.value.trim();
-      const event = this.event.value.trim();
-      const date = this.date.value; // yyyy-mm-dd
-      const time_from = this.time_from.value;
-      const time_to = this.time_to.value;
+  const name = this.name.value.trim();
+  const event = this.event.value.trim();
+  const date = this.date.value;
+  const time_from = this.time_from.value;
+  const time_to = this.time_to.value;
 
-      // If form is incomplete
-      if (!name || !event || !date || !time_from || !time_to) {
-        formMsg.textContent = "Please fill out all fields.";
-        return;
-      }
+  if (!name || !event || !date || !time_from || !time_to) {
+    formMsg.textContent = "Please fill out all fields.";
+    return;
+  }
 
-      // Always fetch latest events just before submission
-      let events;
-      try {
-        events = await fetchEvents();
-      } catch {
-        formMsg.textContent = "Could not check schedule. Try again later.";
-        return;
-      }
+  let events;
+  try {
+    events = await fetchEvents();
+  } catch {
+    formMsg.textContent = "Could not check schedule. Try again later.";
+    return;
+  }
 
-      // Overlap check
-      if (isOverlap(date, time_from, time_to, events)) {
-        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
-        return; // Prevent submission
-      }
+  // Check for overlap before submitting
+  if (isOverlap(date, time_from, time_to, events)) {
+    formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
+    return;
+  }
 
       // Split time and convert to AM/PM for Google Forms
       function to12h(time) {
