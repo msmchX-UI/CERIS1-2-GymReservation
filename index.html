@@ -232,8 +232,12 @@
           left: 'prev,next today',
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }
-      });
+     },
+      eventClick: function(info) {
+        calendar.changeView('timeGridDay', info.event.start);
+        info.jsEvent.preventDefault();
+      }
+    });
       calendar.render();
     });
 
