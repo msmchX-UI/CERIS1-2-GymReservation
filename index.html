@@ -58,29 +58,33 @@
   />
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
 
-<div id="calendar">
-  <!-- FullCalendar will render here -->
+<div class="calendar-container">
+  <div id="calendar">
+    <!-- FullCalendar will render here -->
+  </div>
   <div class="calendar-footer">
     This system is brought to you by Mark Anthony Siaga.
   </div>
 </div>
   
  <style>
-#calendar {
+.calendar-container {
   position: relative;
+  max-width: 800px;
+  margin: 0 auto 2em auto;
+}
+
+#calendar {
   background: white;
   padding: 1em;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 800px;
-  margin: 0 auto;
-  min-height: 560px; /* Ensure enough space for the calendar and footer */
 }
 
 .calendar-footer {
   position: absolute;
-  right: 24px;
-  bottom: 16px;
+  right: 16px;
+  bottom: -2.5em; /* place below the calendar */
   font-size: 0.95em;
   color: #666;
   background: rgba(255,255,255,0.96);
@@ -89,13 +93,12 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   z-index: 10;
   pointer-events: none;
-  /* Optionally add:
-  width: max-content;
-  */
+  white-space: nowrap;
 }
  </style> 
   
   <div>
+  <div class="booking-form-container">
   <div class="booking-form">
     <h2>Make a Reservation</h2>
     <form id="bookingForm">
@@ -121,7 +124,13 @@
       </label><br /><br />
       <button type="submit">Book Now</button>
     </form>
+  </div>
+    
     <div id="form-msg" style="color:red; margin-top:1em;"></div>
+      <div class="reservation-footer">
+    This system is brought to you by Mark Anthony Siaga.
+  </div>
+</div>
   </div>
     </div>
 
