@@ -4,19 +4,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- FullCalendar CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
-  <style>
+ <style>
     body {
       font-family: Arial, sans-serif;
       margin: 2em;
       background: #f3f3f3;
+    }
+    #logo {
+      display: block;
+      margin: 0 auto 1em auto;
+      width: 180px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .calendar-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto 2em auto;
     }
     #calendar {
       background: white;
       padding: 1em;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 800px;
-      margin: 0 auto;
+      min-height: 560px;
+    }
+    .calendar-footer {
+      position: absolute;
+      right: 16px;
+      bottom: -2.5em; /* place below the calendar */
+      font-size: 0.95em;
+      color: #666;
+      background: rgba(255,255,255,0.96);
+      padding: 0.35em 1em;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .booking-form-container {
+      position: relative;
+      max-width: 400px;
+      margin: 2em auto 0 auto;
     }
     .booking-form {
       background: #fff;
@@ -24,21 +58,26 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       max-width: 400px;
-      margin: 2em auto;
+      margin: 0 auto;
     }
-    .calendar-footer {
-  position: absolute;
-  right: 24px;
-  bottom: 16px;
-  font-size: 0.95em;
-  color: #666;
-  background: rgba(255,255,255,0.96);
-  padding: 0.35em 1em;
-  border-radius: 5px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  z-index: 10;
-  pointer-events: none;
-}
+    .reservation-footer {
+      position: absolute;
+      right: 16px;
+      bottom: -2em;
+      font-size: 0.95em;
+      color: #666;
+      background: rgba(255,255,255,0.96);
+      padding: 0.35em 1em;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    /* Make booked events show a pointer (hand) cursor on hover */
+    .fc-daygrid-event, .fc-timegrid-event {
+      cursor: pointer !important;
+    }
   </style>
 </head>
 <body>
@@ -47,104 +86,44 @@
     id="logo" 
     src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
     alt="CERIS Homeowners Association Logo" 
-    style="
-      display: block; 
-      margin: 0 auto 1em auto; 
-      width: 180px; 
-      height: 120px; 
-      object-fit: cover; 
-      border-radius: 8px;
-    "
-  />
+    />
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
 
-<div class="calendar-container">
-  <div id="calendar">
-    <!-- FullCalendar will render here -->
-  </div>
-  <div class="calendar-footer">
-    This system is brought to you by Mark Anthony Siaga.
-  </div>
-</div>
-  
- <style>
-.calendar-container {
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto 2em auto;
-}
-
-#calendar {
-  background: white;
-  padding: 1em;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.calendar-footer {
-  position: absolute;
-  right: 16px;
-  bottom: -2.5em; /* place below the calendar */
-  font-size: 0.95em;
-  color: #666;
-  background: rgba(255,255,255,0.96);
-  padding: 0.35em 1em;
-  border-radius: 5px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  z-index: 10;
-  pointer-events: none;
-  white-space: nowrap;
-}
-   .booking-form-container {
-  position: relative;
-  max-width: 400px;
-  margin: 2em auto 0 auto;
-}
-
-.reservation-footer {
-  position: absolute;
-  right: 16px;
-  bottom: -2em;
-  font-size: 0.95em;
-  color: #666;
-  background: rgba(255,255,255,0.96);
-  padding: 0.35em 1em;
-  border-radius: 5px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-  z-index: 10;
-  pointer-events: none;
-  white-space: nowrap;
-}
- </style> 
+  <div class="calendar-container">
+    <div id="calendar"></div>
+    <div class="calendar-footer">
+      This system is brought to you by Mark Anthony Siaga.
+    </div>
+  </div> 
   
   <div>
-  <div class="booking-form-container">
-  <div class="booking-form">
-    <h2>Make a Reservation</h2>
-    <form id="bookingForm">
-      <label>
-        Name:<br />
-        <input type="text" name="name" required>
-      </label><br /><br />
-      <label>
-        Event:<br />
-        <input type="text" name="event" required>
-      </label><br /><br />
-      <label>
-        Date:<br />
-        <input type="date" name="date" required>
-      </label><br /><br />
-      <label>
-        Time from:<br />
-        <input type="time" name="time_from" required>
-      </label><br /><br />
-      <label>
-        Time to:<br />
-        <input type="time" name="time_to" required>
-      </label><br /><br />
-      <button type="submit">Book Now</button>
-    </form>
-  </div>
+    <div class="booking-form-container">
+      <div class="booking-form">
+        <h2>Make a Reservation</h2>
+        <form id="bookingForm">
+          <label>
+            Name:<br />
+            <input type="text" name="name" required>
+          </label><br /><br />
+          <label>
+            Event:<br />
+            <input type="text" name="event" required>
+          </label><br /><br />
+          <label>
+            Date:<br />
+            <input type="date" name="date" required>
+          </label><br /><br />
+          <label>
+            Time from:<br />
+            <input type="time" name="time_from" required>
+          </label><br /><br />
+          <label>
+            Time to:<br />
+            <input type="time" name="time_to" required>
+          </label><br /><br />
+          <button type="submit">Book Now</button>
+        </form>
+      </div>
     
     <div id="form-msg" style="color:red; margin-top:1em;"></div>
       <div class="reservation-footer">
@@ -220,28 +199,6 @@
           return [];
         });
     }
-
-// from month view to day view
-document.addEventListener('DOMContentLoaded', async function() {
-  const calendarEl = document.getElementById('calendar');
-  latestEvents = await fetchEvents();
-  const calendar = new window.FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    events: latestEvents,
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
-    },
-    eventClick: function(info) {
-      calendar.changeView('timeGridDay', info.event.start); // <-- this is the key!
-      info.jsEvent.preventDefault();
-    }
-  });
-  calendar.render();
-});
-    
-
     
     // Overlap detection function
     function isOverlap(date, from, to, events) {
