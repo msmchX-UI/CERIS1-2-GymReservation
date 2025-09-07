@@ -221,6 +221,28 @@
         });
     }
 
+// from month view to day view
+    document.addEventListener('DOMContentLoaded', async function() {
+  const calendarEl = document.getElementById('calendar');
+  latestEvents = await fetchEvents();
+  const calendar = new window.FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    events: latestEvents,
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    eventClick: function(info) {
+      calendar.changeView('timeGridDay', info.event.start);
+      info.jsEvent.preventDefault();
+    }
+  });
+  calendar.render();
+});
+    
+
+    
     // Overlap detection function
     function isOverlap(date, from, to, events) {
       // date: yyyy-mm-dd, time: hh:mm (24h)
