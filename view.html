@@ -47,33 +47,6 @@
       pointer-events: none;
       white-space: nowrap;
     }
-    .booking-form-container {
-      position: relative;
-      max-width: 400px;
-      margin: 2em auto 0 auto;
-    }
-    .booking-form {
-      background: #fff;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    .reservation-footer {
-      position: absolute;
-      right: 16px;
-      bottom: -2em;
-      font-size: 0.95em;
-      color: #666;
-      background: rgba(255,255,255,0.96);
-      padding: 0.35em 1em;
-      border-radius: 5px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-      z-index: 10;
-      pointer-events: none;
-      white-space: nowrap;
-    }
     /* Make booked events show a pointer (hand) cursor on hover */
     .fc-daygrid-event, .fc-timegrid-event {
       cursor: pointer !important;
@@ -95,6 +68,91 @@
       This system is brought to you by Mark Anthony Siaga.
     </div>
   </div> 
+  
+  <!-- FullCalendar JS (correct version) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    // Set the Google Sheet CSV export URL for your responses tab
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
 
+    // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
+    function toISODate(dateString, timeString) {
+      if (!dateString || !timeString) return null;
+      // Accepts either 'yyyy-mm-dd' or 'm/d/yyyy'
+      let year, month, day;
+      if (dateString.includes('-')) {
+        [year, month, day] = dateString.split('-');
+      } else {
+        [month, day, year] = dateString.split('/');
+      }
+      // If timeString is '08:00:00 AM' or '08:00 AM'
+      let [time, ampm] = timeString.trim().split(' ');
+      let [hour, minute, second] = time.split(':');
+      hour = parseInt(hour, 10);
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      hour = hour.toString().padStart(2, '0');
+      minute = minute ? minute.padStart(2, '0') : '00';
+      second = second ? second.padStart(2, '0') : '00';
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
+    }
+
+    // Used for FullCalendar events
+    async function fetchEvents() {
+      return fetch(GOOGLE_SHEET_CSV_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Sheet not accessible or not public");
+          return response.text();
+        })
+        .then(csvText => {
+          const data = Papa.parse(csvText, { header: true }).data;
+          return data
+            .filter(row => row["Overlap Status"] === "No Overlap")
+            .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
+            .map(row => {
+              let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
+                return `${m3}-${m1.padStart(2, '0')}-${m2.padStart(2, '0')}`;
+              });
+              let start = row["Time from"]
+                ? toISODate(row.Date, row["Time from"])
+                : null;
+              let end = (row.Date && row["Time to"])
+                ? toISODate(row.Date, row["Time to"])
+                : null;
+              return {
+                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
+                start: start || dateStr,
+                end: end,
+                allDay: !start
+              };
+            });
+        })
+        .catch(err => {
+          console.error("Failed to fetch CSV", err);
+          return [];
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', async function() {
+      const calendarEl = document.getElementById('calendar');
+      const latestEvents = await fetchEvents();
+      const calendar = new window.FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: latestEvents,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        eventClick: function(info) {
+          calendar.changeView('timeGridDay', info.event.start);
+          info.jsEvent.preventDefault();
+        }
+      });
+      calendar.render();
+    });
+  </script>
 </body>
 </html>
