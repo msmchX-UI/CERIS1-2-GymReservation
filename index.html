@@ -48,7 +48,7 @@
 
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
 
-<div id="calendar">
+<div id="calendar" style="position:relative;">
   <!-- FullCalendar will render here -->
   <div class="calendar-footer">
     This system is brought to you by Mark Anthony Siaga.
@@ -57,8 +57,15 @@
   
  <style>
 #calendar {
-  position: relative !important;
+  background: white;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative; /* Needed for absolute footer positioning */
 }
+
 .calendar-footer {
   position: absolute;
   right: 16px;
@@ -72,6 +79,7 @@
   z-index: 10;
   pointer-events: none;
 }
+
  </style> 
   
   
@@ -235,7 +243,7 @@
     
       // Check for overlap before submitting
       if (isOverlap(date, time_from, time_to, events)) {
-        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
+        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
         return;
       }
 
