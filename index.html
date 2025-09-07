@@ -234,11 +234,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
     eventClick: function(info) {
-      calendar.changeView('timeGridDay', info.event.start);
+      calendar.changeView('timeGridDay', info.event.start); // <-- this is the key!
       info.jsEvent.preventDefault();
-    },
-    dateClick: function(info) {
-      calendar.changeView('timeGridDay', info.date);
     }
   });
   calendar.render();
