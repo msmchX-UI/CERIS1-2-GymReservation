@@ -45,16 +45,16 @@
   />
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
 
-<div id="calendar" style="position:relative;"></div>
-
+<div id="calendar">
   <!-- FullCalendar will render here -->
-  <div>
+  <div class="calendar-footer">
     This system is brought to you by Mark Anthony Siaga.
   </div>
+</div>
   
  <style>
 #calendar {
-  position: relative;
+  position: relative; /* This is essential */
   background: white;
   padding: 1em;
   border-radius: 8px;
@@ -65,8 +65,8 @@
 
 .calendar-footer {
   position: absolute;
-  right: 0.75em;
-  bottom: 0.75em;
+  right: 16px;
+  bottom: 16px;
   font-size: 0.95em;
   color: #666;
   background: rgba(255,255,255,0.95);
