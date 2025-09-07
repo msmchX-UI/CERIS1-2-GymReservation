@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FullCalendar CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f3f3f3;
+    }
+    .calendar-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto 2em auto;
+    }
+    #calendar {
+      background: white;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      min-height: 560px;
+    }
+    .calendar-footer {
+      position: absolute;
+      right: 16px;
+      bottom: -2.5em;
+      font-size: 0.95em;
+      color: #666;
+      background: rgba(255,255,255,0.96);
+      padding: 0.35em 1em;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <title>Ceris 1 & 2 Gym Booking & Reservation Calendar</title>
+</head>
+<body>
+  <!-- Logo section -->
+  <img 
+    id="logo" 
+    src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
+    alt="CERIS Homeowners Association Logo" 
+    style="
+      display: block; 
+      margin: 0 auto 1em auto; 
+      width: 180px; 
+      height: 120px; 
+      object-fit: cover; 
+      border-radius: 8px;
+    "
+  />
+
+  <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
+
+  <div class="calendar-container">
+    <div id="calendar"></div>
+    <div class="calendar-footer">
+      This system is brought to you by Mark Anthony Siaga.
+    </div>
+  </div>
+
+  <!-- FullCalendar JS (correct version) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    // Use the Data_filters sheet (only "No Overlap" events)
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690";
+
+    function toISODate(dateString, timeString) {
+      if (!dateString || !timeString) return null;
+      let year, month, day;
+      if (dateString.includes('-')) {
+        [year, month, day] = dateString.split('-');
+      } else {
+        [month, day, year] = dateString.split('/');
+      }
+      let [time, ampm] = timeString.trim().split(' ');
+      let [hour, minute, second] = time.split(':');
+      hour = parseInt(hour, 10);
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      hour = hour.toString().padStart(2, '0');
+      minute = minute ? minute.padStart(2, '0') : '00';
+      second = second ? second.padStart(2, '0') : '00';
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
+    }
+
+    async function fetchEvents() {
+      return fetch(GOOGLE_SHEET_CSV_URL)
+        .then(response => {
+          if (!response.ok) throw new Error("Sheet not accessible or not public");
+          return response.text();
+        })
+        .then(csvText => {
+          const data = Papa.parse(csvText, { header: true }).data;
+          return data
+            .filter(row => row["Overlap Status"] === "No Overlap")
+            .filter(row => row.Date && (row["Time from"] || row["Time from"])) // Adjust according to your sheet
+            .map(row => {
+              let start = toISODate(row.Date, row["Time from"]);
+              let end = toISODate(row.Date, row["Time to"]);
+              return {
+                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
+                start: start,
+                end: end,
+                allDay: false
+              };
+            });
+        })
+        .catch(err => {
+          console.error("Failed to fetch CSV", err);
+          return [];
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+      const calendarEl = document.getElementById('calendar');
+      const events = await fetchEvents();
+      const calendar = new window.FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: events,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }
+      });
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
