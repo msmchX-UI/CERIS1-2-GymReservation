@@ -222,7 +222,7 @@
     }
 
 // from month view to day view
-    document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const calendarEl = document.getElementById('calendar');
   latestEvents = await fetchEvents();
   const calendar = new window.FullCalendar.Calendar(calendarEl, {
@@ -236,6 +236,9 @@
     eventClick: function(info) {
       calendar.changeView('timeGridDay', info.event.start);
       info.jsEvent.preventDefault();
+    },
+    dateClick: function(info) {
+      calendar.changeView('timeGridDay', info.date);
     }
   });
   calendar.render();
