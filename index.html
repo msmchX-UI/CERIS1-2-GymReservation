@@ -44,7 +44,7 @@
     "
   />
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
-<br>
+
 <div id="calendar">
   <!-- FullCalendar will render here -->
   <div class="calendar-footer">
@@ -54,27 +54,31 @@
   
  <style>
 #calendar {
-  position: relative; /* This is essential */
+  position: relative;
   background: white;
   padding: 1em;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   max-width: 800px;
   margin: 0 auto;
+  min-height: 560px; /* Ensure enough space for the calendar and footer */
 }
 
 .calendar-footer {
   position: absolute;
-  right: 16px;
+  right: 24px;
   bottom: 16px;
   font-size: 0.95em;
   color: #666;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.96);
   padding: 0.35em 1em;
   border-radius: 5px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   z-index: 10;
   pointer-events: none;
+  /* Optionally add:
+  width: max-content;
+  */
 }
  </style> 
   
