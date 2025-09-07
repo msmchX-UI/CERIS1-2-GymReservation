@@ -109,7 +109,8 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Set the Google Sheet CSV export URL for your responses tab
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
+    // const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=612943979";
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690";
 
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
@@ -141,23 +142,20 @@
           return response.text();
         })
         .then(csvText => {
-          // Parse CSV rows
           const data = Papa.parse(csvText, { header: true }).data;
-          // Map to FullCalendar event format
           return data
+            .filter(row => row["Overlap Status"] === "No Overlap")
             .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
             .map(row => {
               let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
-                // convert m/d/yyyy to yyyy-mm-dd
                 return `${m3}-${m1.padStart(2, '0')}-${m2.padStart(2, '0')}`;
               });
               let start = row["Time from"]
                 ? toISODate(row.Date, row["Time from"])
                 : null;
-              let end = (row.Date && row["Time"])
-                ? toISODate(row.Date, row["Time"])
+              let end = (row.Date && row["Time to"])
+                ? toISODate(row.Date, row["Time to"])
                 : null;
-              // fallback to allDay if time missing
               return {
                 title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
                 start: start || dateStr,
@@ -210,36 +208,36 @@
     });
 
     // Booking form submission (via Google Form)
-document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const formMsg = document.getElementById('form-msg');
-  formMsg.style.color = "red";
-  formMsg.textContent = "Checking for schedule conflicts...";
-
-  const name = this.name.value.trim();
-  const event = this.event.value.trim();
-  const date = this.date.value;
-  const time_from = this.time_from.value;
-  const time_to = this.time_to.value;
-
-  if (!name || !event || !date || !time_from || !time_to) {
-    formMsg.textContent = "Please fill out all fields.";
-    return;
-  }
-
-  let events;
-  try {
-    events = await fetchEvents();
-  } catch {
-    formMsg.textContent = "Could not check schedule. Try again later.";
-    return;
-  }
-
-  // Check for overlap before submitting
-  if (isOverlap(date, time_from, time_to, events)) {
-    formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
-    return;
-  }
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formMsg = document.getElementById('form-msg');
+      formMsg.style.color = "red";
+      formMsg.textContent = "Checking for schedule conflicts...";
+    
+      const name = this.name.value.trim();
+      const event = this.event.value.trim();
+      const date = this.date.value;
+      const time_from = this.time_from.value;
+      const time_to = this.time_to.value;
+    
+      if (!name || !event || !date || !time_from || !time_to) {
+        formMsg.textContent = "Please fill out all fields.";
+        return;
+      }
+    
+      let events;
+      try {
+        events = await fetchEvents();
+      } catch {
+        formMsg.textContent = "Could not check schedule. Try again later.";
+        return;
+      }
+    
+      // Check for overlap before submitting
+      if (isOverlap(date, time_from, time_to, events)) {
+        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different time.";
+        return;
+      }
 
       // Split time and convert to AM/PM for Google Forms
       function to12h(time) {
