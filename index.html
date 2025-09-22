@@ -86,13 +86,13 @@
     .button-group button {
       flex: 1;
       padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
     #updateBtn {
       background-color: #ffa500;
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
     }
     #updateBtn:hover {
       background-color: #e69400;
@@ -100,19 +100,19 @@
     #bookBtn {
       background-color: #007bff;
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
     }
     #bookBtn:hover {
       background-color: #0056b3;
     }
     .form-mode {
       margin-bottom: 10px;
-      padding: 5px;
-      background-color: #f8f9fa;
-      border-left: 4px solid #007bff;
+      padding: 8px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      color: #856404;
       font-weight: bold;
+      text-align: center;
     }
     #cancelEditBtn {
       width: 100%;
@@ -148,10 +148,13 @@
   <div>
     <div class="booking-form-container">
       <div class="booking-form">
-        <div id="form-mode" class="form-mode" style="display: none;"></div>
+        <div id="form-mode" class="form-mode" style="display: none;">
+          EDIT MODE - Modify the details and click Update
+        </div>
         <h2 id="form-title">Make a Reservation</h2>
         <form id="bookingForm">
-          <input type="hidden" id="editRowIndex" name="editRowIndex" value="">
+          <input type="hidden" id="editEventId" name="editEventId" value="">
+          <input type="hidden" id="editRowData" name="editRowData" value="">
           <label>
             Name:<br />
             <input type="text" id="nameInput" name="name" required>
@@ -188,7 +191,7 @@
             <button type="submit" id="bookBtn">Book Now</button>
             <button type="button" id="updateBtn" style="display: none;">Update</button>
           </div>
-          <button type="button" id="cancelEditBtn" style="display: none; margin-top: 10px; width: 100%;">Cancel Edit</button>
+          <button type="button" id="cancelEditBtn" style="display: none;">Cancel Edit</button>
         </form>
       </div>
     
@@ -207,9 +210,14 @@
   <script>
     // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
+    
+    // Google Apps Script Web App URL for updates (you'll need to create this)
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
 
     // Store raw data for editing
     let rawSheetData = [];
+    let isEditMode = false;
+    let currentCalendar = null;
 
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
@@ -270,7 +278,8 @@
                   timeTo: row["Time to"],
                   paid: row.Paid,
                   orNumber: row["OR Number"],
-                  rowIndex: index
+                  rowIndex: index,
+                  rawData: row
                 }
               };
             });
@@ -282,13 +291,13 @@
     }
     
     // Overlap detection function
-    function isOverlap(date, from, to, events, excludeIndex = -1) {
+    function isOverlap(date, from, to, events, excludeId = null) {
       // date: yyyy-mm-dd, time: hh:mm (24h)
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
       for (const ev of events) {
         // Skip the event being edited
-        if (ev.id === excludeIndex) continue;
+        if (excludeId !== null && ev.id === excludeId) continue;
         
         // Only check if dates match (ev.start like 2025-09-05T08:00:00)
         if (!ev.start || !ev.end) continue;
@@ -305,10 +314,8 @@
 
     // Keep a reference to latest events for validation
     let latestEvents = [];
-    let currentCalendar = null;
-    let isEditMode = false;
 
-    // Convert time from 12-hour format to 24-hour format
+    // Convert time from 12-hour format to 24-hour format for input fields
     function to24h(timeStr) {
       if (!timeStr) return '';
       let [time, ampm] = timeStr.trim().split(' ');
@@ -319,7 +326,7 @@
       return `${hour.toString().padStart(2, '0')}:${minute || '00'}`;
     }
 
-    // Convert date from m/d/yyyy to yyyy-mm-dd
+    // Convert date from m/d/yyyy to yyyy-mm-dd for input fields
     function formatDateForInput(dateStr) {
       if (!dateStr) return '';
       if (dateStr.includes('-')) return dateStr;
@@ -327,7 +334,7 @@
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
-    // Fill form with event data
+    // Fill form with event data for editing
     function fillFormWithEventData(eventInfo) {
       const props = eventInfo.event.extendedProps;
       
@@ -338,13 +345,18 @@
       document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
       document.getElementById('paidInput').value = props.paid || '';
       document.getElementById('orNumberInput').value = props.orNumber || '';
-      document.getElementById('editRowIndex').value = props.rowIndex || '';
+      document.getElementById('editEventId').value = eventInfo.event.id || '';
+      document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
       
       // Switch to edit mode
+      switchToEditMode();
+    }
+
+    // Switch form to edit mode
+    function switchToEditMode() {
       isEditMode = true;
       document.getElementById('form-title').textContent = 'Edit Reservation';
       document.getElementById('form-mode').style.display = 'block';
-      document.getElementById('form-mode').textContent = 'EDIT MODE - Click Update to save changes';
       document.getElementById('bookBtn').style.display = 'none';
       document.getElementById('updateBtn').style.display = 'block';
       document.getElementById('cancelEditBtn').style.display = 'block';
@@ -359,7 +371,9 @@
       document.getElementById('updateBtn').style.display = 'none';
       document.getElementById('cancelEditBtn').style.display = 'none';
       document.getElementById('bookingForm').reset();
-      document.getElementById('editRowIndex').value = '';
+      document.getElementById('editEventId').value = '';
+      document.getElementById('editRowData').value = '';
+      document.getElementById('form-msg').textContent = '';
     }
 
     document.addEventListener('DOMContentLoaded', async function() {
@@ -392,7 +406,7 @@
       // Update button
       document.getElementById('updateBtn').addEventListener('click', async function() {
         const formMsg = document.getElementById('form-msg');
-        formMsg.style.color = "red";
+        formMsg.style.color = "orange";
         formMsg.textContent = "Updating reservation...";
 
         const form = document.getElementById('bookingForm');
@@ -403,40 +417,72 @@
         const time_to = form.time_to.value;
         const paid = form.paid.value;
         const ornumber = form.ornumber.value.trim();
-        const editRowIndex = parseInt(form.editRowIndex.value);
+        const editEventId = parseInt(form.editEventId.value);
 
         if (!name || !event || !date || !time_from || !time_to || !paid) {
+          formMsg.style.color = "red";
           formMsg.textContent = "Please fill out all required fields.";
           return;
         }
 
         // Check for overlap (excluding current event)
-        if (isOverlap(date, time_from, time_to, latestEvents, editRowIndex)) {
-          formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
+        if (isOverlap(date, time_from, time_to, latestEvents, editEventId)) {
+          formMsg.style.color = "red";
+          formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
           return;
         }
 
-        // Convert to 12-hour format for Google Forms
+        // Convert to 12-hour format for Google Sheets
         function to12h(time) {
           let [h, m] = time.split(":").map(Number);
           let ampm = h >= 12 ? "PM" : "AM";
           h = h % 12;
           if (h === 0) h = 12;
-          return { hour: h, minute: m, ampm };
+          return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
         }
-        const tFrom = to12h(time_from);
-        const tTo = to12h(time_to);
 
-        // Note: For actual update, you'd need to modify your Google Apps Script
-        // to handle updates. For now, we'll show a message
-        formMsg.style.color = "orange";
-        formMsg.textContent = "Update functionality requires server-side implementation. Please delete and recreate the booking.";
-        
-        // Reset form after delay
-        setTimeout(() => {
-          resetToBookingMode();
-          formMsg.textContent = "";
-        }, 3000);
+        // Prepare update data
+        const updateData = {
+          action: 'update',
+          rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
+          name: name,
+          event: event,
+          date: date,
+          timeFrom: to12h(time_from),
+          timeTo: to12h(time_to),
+          paid: paid,
+          orNumber: ornumber
+        };
+
+        try {
+          // Send update to Google Apps Script
+          const response = await fetch(UPDATE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+          });
+
+          if (response.ok) {
+            formMsg.style.color = "green";
+            formMsg.textContent = "Reservation updated successfully! Calendar will refresh shortly.";
+            
+            // Refresh calendar after a short delay
+            setTimeout(async () => {
+              latestEvents = await fetchEvents();
+              currentCalendar.removeAllEvents();
+              currentCalendar.addEventSource(latestEvents);
+              resetToBookingMode();
+            }, 2000);
+          } else {
+            throw new Error('Update failed');
+          }
+        } catch (error) {
+          formMsg.style.color = "red";
+          formMsg.textContent = "Update failed. Please try again or contact the administrator.";
+          console.error('Update error:', error);
+        }
       });
     });
 
@@ -444,8 +490,8 @@
     document.getElementById('bookingForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // Don't submit if in edit mode (use Update button instead)
       if (isEditMode) {
-        // Handle update via the update button instead
         return;
       }
 
@@ -507,7 +553,6 @@
       formData.append("entry.40428640", paid);       // Paid
       formData.append("entry.1853220772", ornumber);       // OR Number
 
-      
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
         mode: "no-cors",
