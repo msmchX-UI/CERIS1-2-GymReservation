@@ -208,14 +208,13 @@
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // Google Sheets URLs - using your spreadsheet ID
+    // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
     
-    // Google Apps Script Web App URL for updates 
-    // Replace YOUR_SCRIPT_ID_HERE with your actual Apps Script deployment ID
-    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_ACTUAL_SCRIPT_ID_HERE/exec";
 
-    // Store raw data for editing
+    // Store data for editing
     let rawSheetData = [];
     let isEditMode = false;
     let currentCalendar = null;
@@ -223,14 +222,12 @@
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
       if (!dateString || !timeString) return null;
-      // Accepts either 'yyyy-mm-dd' or 'm/d/yyyy'
       let year, month, day;
       if (dateString.includes('-')) {
         [year, month, day] = dateString.split('-');
       } else {
         [month, day, year] = dateString.split('/');
       }
-      // If timeString is '08:00:00 AM' or '08:00 AM'
       let [time, ampm] = timeString.trim().split(' ');
       let [hour, minute, second] = time.split(':');
       hour = parseInt(hour, 10);
@@ -293,19 +290,14 @@
     
     // Overlap detection function
     function isOverlap(date, from, to, events, excludeId = null) {
-      // date: yyyy-mm-dd, time: hh:mm (24h)
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
       for (const ev of events) {
-        // Skip the event being edited
         if (excludeId !== null && ev.id === excludeId) continue;
-        
-        // Only check if dates match (ev.start like 2025-09-05T08:00:00)
         if (!ev.start || !ev.end) continue;
         if (!ev.start.startsWith(date)) continue;
         const evStart = new Date(ev.start);
         const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
-        // Overlap if (startA < endB) && (endA > startB)
         if (reqStart < evEnd && reqEnd > evStart) {
           return true;
         }
@@ -404,11 +396,11 @@
         resetToBookingMode();
       });
 
-      // Update button
+      // Update button - CURRENTLY SHOWS DEMO MESSAGE
       document.getElementById('updateBtn').addEventListener('click', async function() {
         const formMsg = document.getElementById('form-msg');
         formMsg.style.color = "orange";
-        formMsg.textContent = "Updating reservation...";
+        formMsg.textContent = "Processing update...";
 
         const form = document.getElementById('bookingForm');
         const name = form.name.value.trim();
@@ -433,6 +425,16 @@
           return;
         }
 
+        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
+        formMsg.style.color = "green";
+        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
+        
+        setTimeout(() => {
+          resetToBookingMode();
+        }, 4000);
+
+        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
+        
         // Convert to 12-hour format for Google Sheets
         function to12h(time) {
           let [h, m] = time.split(":").map(Number);
@@ -484,6 +486,7 @@
           formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
           console.error('Update error:', error);
         }
+        */
       });
     });
 
@@ -538,13 +541,13 @@
       const tFrom = to12h(time_from);
       const tTo = to12h(time_to);
 
-      // Your Google Form POST URL (replace with your actual formResponse URL)
+      // Your Google Form POST URL
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
       formData.append("entry.1062862748", event);       // Event
-      formData.append("entry.619214382", date);         // Date (single field, yyyy-mm-dd)
+      formData.append("entry.619214382", date);         // Date
       formData.append("entry.295264701_hour", tFrom.hour);
       formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
       formData.append("entry.295264701_ampm", tFrom.ampm);
