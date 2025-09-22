@@ -114,6 +114,19 @@
       border-left: 4px solid #007bff;
       font-weight: bold;
     }
+    #cancelEditBtn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #cancelEditBtn:hover {
+      background-color: #5a6268;
+    }
   </style>
 </head>
 <body>
@@ -158,6 +171,18 @@
           <label>
             Time to:<br />
             <input type="time" id="timeToInput" name="time_to" required>
+          </label><br /><br />
+          <label>
+            Paid:<br />
+            <select id="paidInput" name="paid" required>
+              <option value="">Select</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label><br /><br />
+          <label>
+            OR Number:<br />
+            <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
           </label><br /><br />
           <div class="button-group">
             <button type="submit" id="bookBtn">Book Now</button>
@@ -243,6 +268,8 @@
                   date: row.Date,
                   timeFrom: row["Time from"],
                   timeTo: row["Time to"],
+                  paid: row.Paid,
+                  orNumber: row["OR Number"],
                   rowIndex: index
                 }
               };
@@ -309,6 +336,8 @@
       document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
       document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
       document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
+      document.getElementById('paidInput').value = props.paid || '';
+      document.getElementById('orNumberInput').value = props.orNumber || '';
       document.getElementById('editRowIndex').value = props.rowIndex || '';
       
       // Switch to edit mode
@@ -372,10 +401,12 @@
         const date = form.date.value;
         const time_from = form.time_from.value;
         const time_to = form.time_to.value;
+        const paid = form.paid.value;
+        const ornumber = form.ornumber.value.trim();
         const editRowIndex = parseInt(form.editRowIndex.value);
 
-        if (!name || !event || !date || !time_from || !time_to) {
-          formMsg.textContent = "Please fill out all fields.";
+        if (!name || !event || !date || !time_from || !time_to || !paid) {
+          formMsg.textContent = "Please fill out all required fields.";
           return;
         }
 
@@ -427,9 +458,11 @@
       const date = this.date.value;
       const time_from = this.time_from.value;
       const time_to = this.time_to.value;
+      const paid = this.paid.value;
+      const ornumber = this.ornumber.value.trim();
     
-      if (!name || !event || !date || !time_from || !time_to) {
-        formMsg.textContent = "Please fill out all fields.";
+      if (!name || !event || !date || !time_from || !time_to || !paid) {
+        formMsg.textContent = "Please fill out all required fields.";
         return;
       }
     
@@ -471,7 +504,10 @@
       formData.append("entry.877971115_hour", tTo.hour);
       formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
       formData.append("entry.877971115_ampm", tTo.ampm);
+      formData.append("entry.40428640", paid);       // Paid
+      formData.append("entry.1853220772", ornumber);       // OR Number
 
+      
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
         mode: "no-cors",
