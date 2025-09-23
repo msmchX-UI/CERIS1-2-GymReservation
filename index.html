@@ -7,15 +7,7 @@
   <link rel="icon" type="image/png" href="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png">
  <style>
     body {
-      font-famil      document.addEventListener('DOMContentLoaded', async function() {
-      const calendarEl = document.getElementById('calendar');
-      try {
-        latestEvents = await fetchEvents();
-        console.log('Events loaded:', latestEvents);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      }
-      currentCalendar = new window.FullCalendar.Calendar(calendarEl, {rial, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 2em;
       background: #f3f3f3;
     }
@@ -238,6 +230,8 @@
   </div>
     </div>
 
+  <!-- FullCalendar JS (correct version) -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js'></script>
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
@@ -274,16 +268,13 @@
 
     // Used for FullCalendar events
     async function fetchEvents() {
-      console.log('Fetching events from:', GOOGLE_SHEET_CSV_URL);
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
           if (!response.ok) throw new Error("Sheet not accessible or not public");
           return response.text();
         })
         .then(csvText => {
-          console.log('Received CSV data:', csvText.substring(0, 200) + '...'); // Show first 200 chars
           const data = Papa.parse(csvText, { header: true }).data;
-          console.log('Parsed data:', data);
           rawSheetData = data; // Store raw data for editing
           return data
             .filter(row => row["Overlap Status"] === "No Overlap")
