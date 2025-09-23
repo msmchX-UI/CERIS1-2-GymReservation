@@ -335,6 +335,15 @@
     // Keep a reference to latest events for validation
     let latestEvents = [];
 
+    // Convert time to 12-hour format for Google Sheets
+    function to12h(time) {
+      let [h, m] = time.split(":").map(Number);
+      let ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12;
+      if (h === 0) h = 12;
+      return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
+    }
+
     // Convert time from 12-hour format to 24-hour format for input fields
     function to24h(timeStr) {
       if (!timeStr) return '';
