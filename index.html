@@ -479,14 +479,19 @@
           };
           console.log('Sending update data:', updateData);
 
-          const response = await fetch(UPDATE_SCRIPT_URL, {
+          const response = await fetch(UPDATE_SCRIPT_URL + '?action=update', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            mode: 'cors',
             body: JSON.stringify(updateData)
           });
 
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
           const result = await response.json();
           
           if (result.success) {
