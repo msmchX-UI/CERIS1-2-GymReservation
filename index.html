@@ -264,7 +264,7 @@
                 : null;
               return {
                 id: index, // Add ID for identification
-                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
+                title: `${row.Event ? row.Event : "Booking"} - ${row.Name || ""} ${row.Paid ? "(PAID" + (row["OR Number"] ? ` - OR#${row["OR Number"]}` : "") + ")" : "(UNPAID)"}`,
                 start: start || dateStr,
                 end: end,
                 allDay: !start,
