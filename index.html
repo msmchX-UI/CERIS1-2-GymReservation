@@ -114,6 +114,26 @@
       font-weight: bold;
       text-align: center;
     }
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .form-group {
+      flex: 1;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
     #cancelEditBtn {
       width: 100%;
       margin-top: 10px;
@@ -155,38 +175,45 @@
         <form id="bookingForm">
           <input type="hidden" id="editEventId" name="editEventId" value="">
           <input type="hidden" id="editRowData" name="editRowData" value="">
-          <label>
-            Name:<br />
+          <div class="form-group">
+            <label for="nameInput">Name:</label>
             <input type="text" id="nameInput" name="name" required>
-          </label><br /><br />
-          <label>
-            Event:<br />
+          </div>
+          
+          <div class="form-group">
+            <label for="eventInput">Event:</label>
             <input type="text" id="eventInput" name="event" required>
-          </label><br /><br />
-          <label>
-            Date:<br />
-            <input type="date" id="dateInput" name="date" required>
-          </label><br /><br />
-          <label>
-            Time from:<br />
-            <input type="time" id="timeFromInput" name="time_from" required>
-          </label><br /><br />
-          <label>
-            Time to:<br />
-            <input type="time" id="timeToInput" name="time_to" required>
-          </label><br /><br />
-          <label>
-            Paid:<br />
-            <select id="paidInput" name="paid" required>
-              <option value="">Select</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </label><br /><br />
-          <label>
-            OR Number:<br />
-            <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
-          </label><br /><br />
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dateInput">Date:</label>
+              <input type="date" id="dateInput" name="date" required>
+            </div>
+            <div class="form-group">
+              <label for="timeFromInput">Time from:</label>
+              <input type="time" id="timeFromInput" name="time_from" required>
+            </div>
+            <div class="form-group">
+              <label for="timeToInput">Time to:</label>
+              <input type="time" id="timeToInput" name="time_to" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="paidInput">Paid:</label>
+              <select id="paidInput" name="paid" required>
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="orNumberInput">OR Number:</label>
+              <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
+            </div>
+          </div>
           <div class="button-group">
             <button type="submit" id="bookBtn">Book Now</button>
             <button type="button" id="updateBtn" style="display: none;">Update</button>
