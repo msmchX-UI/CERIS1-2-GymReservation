@@ -494,10 +494,9 @@
           
           // Try to fetch the latest data to verify the update
           const updatedEvents = await fetchEvents();
+          // Find the exact event we're updating using the row index
           const updatedEvent = updatedEvents.find(event => 
-            event.extendedProps.name === name && 
-            event.extendedProps.date === date &&
-            event.extendedProps.timeFrom === to12h(time_from)
+            event.extendedProps.rowIndex === editEventId
           );
           
           // Consider it a success if we can find the updated event
