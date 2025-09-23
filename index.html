@@ -238,8 +238,8 @@
     // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
     
-    // Google Apps Script Web App URL - The URL from your deployed Google Apps Script
-    const UPDATE_SCRIPT_URL = "YOUR_DEPLOYED_SCRIPT_URL_HERE";
+    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_ACTUAL_SCRIPT_ID_HERE/exec";
 
     // Store data for editing
     let rawSheetData = [];
@@ -451,14 +451,15 @@
           return;
         }
 
-        // Convert to 12-hour format for Google Sheets
-        function to12h(time) {
-          let [h, m] = time.split(":").map(Number);
-          let ampm = h >= 12 ? "PM" : "AM";
-          h = h % 12;
-          if (h === 0) h = 12;
-          return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
-        }
+        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
+        formMsg.style.color = "green";
+        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
+        
+        setTimeout(() => {
+          resetToBookingMode();
+        }, 4000);
+
+        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
         
         // Convert to 12-hour format for Google Sheets
         function to12h(time) {
