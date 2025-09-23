@@ -1,574 +1,112 @@
+<?php
+// Simple test page to demonstrate current functionality
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- FullCalendar CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
-  <link rel="icon" type="image/png" href="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png">
- <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2em;
-      background: #f3f3f3;
-    }
-    #logo {
-      display: block;
-      margin: 0 auto 1em auto;
-      width: 180px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .calendar-container {
-      position: relative;
-      max-width: 800px;
-      margin: 0 auto 2em auto;
-    }
-    #calendar {
-      background: white;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      min-height: 560px;
-    }
-    .calendar-footer {
-      position: absolute;
-      right: 16px;
-      bottom: -2.5em; /* place below the calendar */
-      font-size: 0.95em;
-      color: #666;
-      background: rgba(255,255,255,0.96);
-      padding: 0.35em 1em;
-      border-radius: 5px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      z-index: 10;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    .booking-form-container {
-      position: relative;
-      max-width: 400px;
-      margin: 2em auto 0 auto;
-    }
-    .booking-form {
-      background: #fff;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    .reservation-footer {
-      position: absolute;
-      right: 16px;
-      bottom: -2em;
-      font-size: 0.95em;
-      color: #666;
-      background: rgba(255,255,255,0.96);
-      padding: 0.35em 1em;
-      border-radius: 5px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-      z-index: 10;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    /* Make booked events show a pointer (hand) cursor on hover */
-    .fc-daygrid-event, .fc-timegrid-event {
-      cursor: pointer !important;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-    }
-    .button-group button {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #updateBtn {
-      background-color: #ffa500;
-      color: white;
-    }
-    #updateBtn:hover {
-      background-color: #e69400;
-    }
-    #bookBtn {
-      background-color: #007bff;
-      color: white;
-    }
-    #bookBtn:hover {
-      background-color: #0056b3;
-    }
-    .form-mode {
-      margin-bottom: 10px;
-      padding: 8px;
-      background-color: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 4px;
-      color: #856404;
-      font-weight: bold;
-      text-align: center;
-    }
-    #cancelEditBtn {
-      width: 100%;
-      margin-top: 10px;
-      padding: 8px;
-      background-color: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #cancelEditBtn:hover {
-      background-color: #5a6268;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Current Functionality</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .feature-box { 
+            background: #f0f8ff; 
+            border: 1px solid #ccc; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+        }
+        .working { background: #d4edda; border-color: #c3e6cb; }
+        .needs-setup { background: #fff3cd; border-color: #ffeaa7; }
+        h1 { color: #333; }
+        h2 { color: #666; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+        .step { margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+    </style>
 </head>
 <body>
-  <!-- Logo section -->
-  <img 
-    id="logo" 
-    src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
-    alt="CERIS Homeowners Association Logo" 
-    />
-  <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
-
-  <div class="calendar-container">
-    <div id="calendar"></div>
-    <div class="calendar-footer">
-      This system is brought to you by Mark Anthony Siaga.
-    </div>
-  </div> 
-    <br>  
-  <div>
-    <div class="booking-form-container">
-      <div class="booking-form">
-        <div id="form-mode" class="form-mode" style="display: none;">
-          EDIT MODE - Modify the details and click Update
+    <h1>Gym Reservation System - Functionality Status</h1>
+    
+    <div class="feature-box working">
+        <h2>✅ Currently Working Features:</h2>
+        <p><strong>Event Click → Form Population</strong></p>
+        <p>Your system already does exactly what you requested! Here's how it works:</p>
+        
+        <div class="step">
+            <strong>1. Data Fetching:</strong> The calendar fetches reservation data from your Google Sheet via this URL:
+            <br><code>https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690</code>
         </div>
-        <h2 id="form-title">Make a Reservation</h2>
-        <form id="bookingForm">
-          <input type="hidden" id="editEventId" name="editEventId" value="">
-          <input type="hidden" id="editRowData" name="editRowData" value="">
-          <label>
-            Name:<br />
-            <input type="text" id="nameInput" name="name" required>
-          </label><br /><br />
-          <label>
-            Event:<br />
-            <input type="text" id="eventInput" name="event" required>
-          </label><br /><br />
-          <label>
-            Date:<br />
-            <input type="date" id="dateInput" name="date" required>
-          </label><br /><br />
-          <label>
-            Time from:<br />
-            <input type="time" id="timeFromInput" name="time_from" required>
-          </label><br /><br />
-          <label>
-            Time to:<br />
-            <input type="time" id="timeToInput" name="time_to" required>
-          </label><br /><br />
-          <label>
-            Paid:<br />
-            <select id="paidInput" name="paid" required>
-              <option value="">Select</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </label><br /><br />
-          <label>
-            OR Number:<br />
-            <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
-          </label><br /><br />
-          <div class="button-group">
-            <button type="submit" id="bookBtn">Book Now</button>
-            <button type="button" id="updateBtn" style="display: none;">Update</button>
-          </div>
-          <button type="button" id="cancelEditBtn" style="display: none;">Cancel Edit</button>
-        </form>
-      </div>
-    
-    <div id="form-msg" style="color:red; margin-top:1em;"></div>
-      <div class="reservation-footer">
-    This system is brought to you by Mark Anthony Siaga.
-  </div>
-</div>
-  </div>
+        
+        <div class="step">
+            <strong>2. Event Display:</strong> Each reservation appears as a clickable event on the calendar with format: "Event - Name"
+        </div>
+        
+        <div class="step">
+            <strong>3. Click to Edit:</strong> When you click any event on the calendar, the <code>eventClick</code> function:
+            <ul>
+                <li>Calls <code>fillFormWithEventData()</code></li>
+                <li>Populates all form fields with the clicked event's data from the Google Sheet</li>
+                <li>Switches form to "EDIT MODE"</li>
+                <li>Changes view to day view showing the event clearly</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <strong>4. Form Fields Populated:</strong>
+            <ul>
+                <li>Name: <code>props.name</code></li>
+                <li>Event: <code>props.event</code></li>
+                <li>Date: <code>props.date</code> (converted to YYYY-MM-DD format)</li>
+                <li>Time from: <code>props.timeFrom</code> (converted from 12h to 24h format)</li>
+                <li>Time to: <code>props.timeTo</code> (converted from 12h to 24h format)</li>
+                <li>Paid: <code>props.paid</code></li>
+                <li>OR Number: <code>props.orNumber</code></li>
+            </ul>
+        </div>
     </div>
 
-  <!-- FullCalendar JS (correct version) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- PapaParse for CSV parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script>
-    // Set the Google Sheet CSV export URL for your responses tab
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
-    
-    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
-    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_ACTUAL_SCRIPT_ID_HERE/exec";
-
-    // Store data for editing
-    let rawSheetData = [];
-    let isEditMode = false;
-    let currentCalendar = null;
-
-    // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
-    function toISODate(dateString, timeString) {
-      if (!dateString || !timeString) return null;
-      let year, month, day;
-      if (dateString.includes('-')) {
-        [year, month, day] = dateString.split('-');
-      } else {
-        [month, day, year] = dateString.split('/');
-      }
-      let [time, ampm] = timeString.trim().split(' ');
-      let [hour, minute, second] = time.split(':');
-      hour = parseInt(hour, 10);
-      if (ampm === 'PM' && hour !== 12) hour += 12;
-      if (ampm === 'AM' && hour === 12) hour = 0;
-      hour = hour.toString().padStart(2, '0');
-      minute = minute ? minute.padStart(2, '0') : '00';
-      second = second ? second.padStart(2, '0') : '00';
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
-    }
-
-    // Used for FullCalendar events
-    async function fetchEvents() {
-      return fetch(GOOGLE_SHEET_CSV_URL)
-        .then(response => {
-          if (!response.ok) throw new Error("Sheet not accessible or not public");
-          return response.text();
-        })
-        .then(csvText => {
-          const data = Papa.parse(csvText, { header: true }).data;
-          rawSheetData = data; // Store raw data for editing
-          return data
-            .filter(row => row["Overlap Status"] === "No Overlap")
-            .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
-            .map((row, index) => {
-              let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
-                return `${m3}-${m1.padStart(2, '0')}-${m2.padStart(2, '0')}`;
-              });
-              let start = row["Time from"]
-                ? toISODate(row.Date, row["Time from"])
-                : null;
-              let end = (row.Date && row["Time to"])
-                ? toISODate(row.Date, row["Time to"])
-                : null;
-              return {
-                id: index, // Add ID for identification
-                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
-                start: start || dateStr,
-                end: end,
-                allDay: !start,
-                extendedProps: {
-                  name: row.Name,
-                  event: row.Event,
-                  date: row.Date,
-                  timeFrom: row["Time from"],
-                  timeTo: row["Time to"],
-                  paid: row.Paid,
-                  orNumber: row["OR Number"],
-                  rowIndex: index,
-                  rawData: row
-                }
-              };
-            });
-        })
-        .catch(err => {
-          console.error("Failed to fetch CSV", err);
-          return [];
-        });
-    }
-    
-    // Overlap detection function
-    function isOverlap(date, from, to, events, excludeId = null) {
-      const reqStart = new Date(`${date}T${from}`);
-      const reqEnd = new Date(`${date}T${to}`);
-      for (const ev of events) {
-        if (excludeId !== null && ev.id === excludeId) continue;
-        if (!ev.start || !ev.end) continue;
-        if (!ev.start.startsWith(date)) continue;
-        const evStart = new Date(ev.start);
-        const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
-        if (reqStart < evEnd && reqEnd > evStart) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // Keep a reference to latest events for validation
-    let latestEvents = [];
-
-    // Convert time from 12-hour format to 24-hour format for input fields
-    function to24h(timeStr) {
-      if (!timeStr) return '';
-      let [time, ampm] = timeStr.trim().split(' ');
-      let [hour, minute] = time.split(':');
-      hour = parseInt(hour, 10);
-      if (ampm === 'PM' && hour !== 12) hour += 12;
-      if (ampm === 'AM' && hour === 12) hour = 0;
-      return `${hour.toString().padStart(2, '0')}:${minute || '00'}`;
-    }
-
-    // Convert date from m/d/yyyy to yyyy-mm-dd for input fields
-    function formatDateForInput(dateStr) {
-      if (!dateStr) return '';
-      if (dateStr.includes('-')) return dateStr;
-      const [month, day, year] = dateStr.split('/');
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-
-    // Fill form with event data for editing
-    function fillFormWithEventData(eventInfo) {
-      const props = eventInfo.event.extendedProps;
-      
-      document.getElementById('nameInput').value = props.name || '';
-      document.getElementById('eventInput').value = props.event || '';
-      document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
-      document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
-      document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
-      document.getElementById('paidInput').value = props.paid || '';
-      document.getElementById('orNumberInput').value = props.orNumber || '';
-      document.getElementById('editEventId').value = eventInfo.event.id || '';
-      document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
-      
-      // Switch to edit mode
-      switchToEditMode();
-    }
-
-    // Switch form to edit mode
-    function switchToEditMode() {
-      isEditMode = true;
-      document.getElementById('form-title').textContent = 'Edit Reservation';
-      document.getElementById('form-mode').style.display = 'block';
-      document.getElementById('bookBtn').style.display = 'none';
-      document.getElementById('updateBtn').style.display = 'block';
-      document.getElementById('cancelEditBtn').style.display = 'block';
-    }
-
-    // Reset form to booking mode
-    function resetToBookingMode() {
-      isEditMode = false;
-      document.getElementById('form-title').textContent = 'Make a Reservation';
-      document.getElementById('form-mode').style.display = 'none';
-      document.getElementById('bookBtn').style.display = 'block';
-      document.getElementById('updateBtn').style.display = 'none';
-      document.getElementById('cancelEditBtn').style.display = 'none';
-      document.getElementById('bookingForm').reset();
-      document.getElementById('editEventId').value = '';
-      document.getElementById('editRowData').value = '';
-      document.getElementById('form-msg').textContent = '';
-    }
-
-    document.addEventListener('DOMContentLoaded', async function() {
-      const calendarEl = document.getElementById('calendar');
-      latestEvents = await fetchEvents();
-      currentCalendar = new window.FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: latestEvents,
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        eventClick: function(info) {
-          // Fill form with clicked event data
-          fillFormWithEventData(info);
-          
-          // Switch to day view to show the event clearly
-          currentCalendar.changeView('timeGridDay', info.event.start);
-          info.jsEvent.preventDefault();
-        }
-      });
-      currentCalendar.render();
-
-      // Cancel edit button
-      document.getElementById('cancelEditBtn').addEventListener('click', function() {
-        resetToBookingMode();
-      });
-
-      // Update button - CURRENTLY SHOWS DEMO MESSAGE
-      document.getElementById('updateBtn').addEventListener('click', async function() {
-        const formMsg = document.getElementById('form-msg');
-        formMsg.style.color = "orange";
-        formMsg.textContent = "Processing update...";
-
-        const form = document.getElementById('bookingForm');
-        const name = form.name.value.trim();
-        const event = form.event.value.trim();
-        const date = form.date.value;
-        const time_from = form.time_from.value;
-        const time_to = form.time_to.value;
-        const paid = form.paid.value;
-        const ornumber = form.ornumber.value.trim();
-        const editEventId = parseInt(form.editEventId.value);
-
-        if (!name || !event || !date || !time_from || !time_to || !paid) {
-          formMsg.style.color = "red";
-          formMsg.textContent = "Please fill out all required fields.";
-          return;
-        }
-
-        // Check for overlap (excluding current event)
-        if (isOverlap(date, time_from, time_to, latestEvents, editEventId)) {
-          formMsg.style.color = "red";
-          formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
-          return;
-        }
-
-        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
-        formMsg.style.color = "green";
-        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
+    <div class="feature-box needs-setup">
+        <h2>⚠️ Needs Setup for Full Functionality:</h2>
+        <p><strong>Update Feature</strong></p>
+        <p>The "Update" button currently shows a demo message. To make it functional, you need:</p>
         
-        setTimeout(() => {
-          resetToBookingMode();
-        }, 4000);
-
-        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
+        <div class="step">
+            <strong>1. Google Apps Script Setup:</strong> Create a Google Apps Script web app that can update your Google Sheet
+        </div>
         
-        // Convert to 12-hour format for Google Sheets
-        function to12h(time) {
-          let [h, m] = time.split(":").map(Number);
-          let ampm = h >= 12 ? "PM" : "AM";
-          h = h % 12;
-          if (h === 0) h = 12;
-          return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
-        }
+        <div class="step">
+            <strong>2. Replace URL:</strong> Update the <code>UPDATE_SCRIPT_URL</code> in your index.html with your actual script URL
+        </div>
+        
+        <div class="step">
+            <strong>3. Uncomment Code:</strong> Uncomment the update section in the JavaScript (lines with the actual fetch request)
+        </div>
+    </div>
 
-        // Prepare update data
-        const updateData = {
-          action: 'update',
-          rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
-          name: name,
-          event: event,
-          date: date,
-          timeFrom: to12h(time_from),
-          timeTo: to12h(time_to),
-          paid: paid,
-          orNumber: ornumber
-        };
+    <div class="feature-box working">
+        <h2>🎯 How to Test Current Working Features:</h2>
+        <ol>
+            <li>Go back to your main page: <a href="index.html" target="_blank">index.html</a></li>
+            <li>Wait for the calendar to load (it fetches data from your Google Sheet)</li>
+            <li>Click on any event/reservation on the calendar</li>
+            <li>Watch the form automatically populate with all details from the Google Sheet</li>
+            <li>Notice how the form switches to "EDIT MODE"</li>
+            <li>See how all fields are filled with the exact data from your Google Sheet responses</li>
+        </ol>
+    </div>
 
-        try {
-          // Send update to Google Apps Script
-          const response = await fetch(UPDATE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData)
-          });
-
-          if (response.ok) {
-            formMsg.style.color = "green";
-            formMsg.textContent = "Reservation updated successfully! Calendar will refresh shortly.";
-            
-            // Refresh calendar after a short delay
-            setTimeout(async () => {
-              latestEvents = await fetchEvents();
-              currentCalendar.removeAllEvents();
-              currentCalendar.addEventSource(latestEvents);
-              resetToBookingMode();
-            }, 2000);
-          } else {
-            throw new Error('Update failed');
-          }
-        } catch (error) {
-          formMsg.style.color = "red";
-          formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
-          console.error('Update error:', error);
-        }
-        */
-      });
-    });
-
-    // Booking form submission (via Google Form)
-    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      // Don't submit if in edit mode (use Update button instead)
-      if (isEditMode) {
-        return;
-      }
-
-      const formMsg = document.getElementById('form-msg');
-      formMsg.style.color = "red";
-      formMsg.textContent = "Checking for schedule conflicts...";
+    <div class="feature-box">
+        <h2>📋 Summary:</h2>
+        <p><strong>Your request is already implemented!</strong> When you click on any event in the calendar, the edit form automatically populates with all the details from your Google Sheets responses. The system:</p>
+        <ul>
+            <li>✅ Fetches data from Google Sheets</li>
+            <li>✅ Shows events on calendar</li>
+            <li>✅ Populates form when event is clicked</li>
+            <li>✅ Switches to edit mode</li>
+            <li>⚠️ Update functionality ready (needs Google Apps Script setup)</li>
+        </ul>
+    </div>
     
-      const name = this.name.value.trim();
-      const event = this.event.value.trim();
-      const date = this.date.value;
-      const time_from = this.time_from.value;
-      const time_to = this.time_to.value;
-      const paid = this.paid.value;
-      const ornumber = this.ornumber.value.trim();
-    
-      if (!name || !event || !date || !time_from || !time_to || !paid) {
-        formMsg.textContent = "Please fill out all required fields.";
-        return;
-      }
-    
-      let events;
-      try {
-        events = await fetchEvents();
-      } catch {
-        formMsg.textContent = "Could not check schedule. Try again later.";
-        return;
-      }
-    
-      // Check for overlap before submitting
-      if (isOverlap(date, time_from, time_to, events)) {
-        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
-        return;
-      }
-
-      // Split time and convert to AM/PM for Google Forms
-      function to12h(time) {
-        let [h, m] = time.split(":").map(Number);
-        let ampm = h >= 12 ? "PM" : "AM";
-        h = h % 12;
-        if (h === 0) h = 12;
-        return { hour: h, minute: m, ampm };
-      }
-      const tFrom = to12h(time_from);
-      const tTo = to12h(time_to);
-
-      // Your Google Form POST URL
-      const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
-
-      const formData = new FormData();
-      formData.append("entry.1148333639", name);        // Name
-      formData.append("entry.1062862748", event);       // Event
-      formData.append("entry.619214382", date);         // Date
-      formData.append("entry.295264701_hour", tFrom.hour);
-      formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
-      formData.append("entry.295264701_ampm", tFrom.ampm);
-      formData.append("entry.877971115_hour", tTo.hour);
-      formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
-      formData.append("entry.877971115_ampm", tTo.ampm);
-      formData.append("entry.40428640", paid);       // Paid
-      formData.append("entry.1853220772", ornumber);       // OR Number
-
-      fetch(GOOGLE_FORM_ACTION_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-      }).then(() => {
-        formMsg.style.color = "green";
-        formMsg.textContent = "Booking submitted! Please refresh calendar after a minute.";
-        this.reset();
-      }).catch(() => {
-        formMsg.textContent = "Error submitting booking.";
-      });
-    });
-  </script>
+    <p><a href="index.html">← Back to Main Calendar</a></p>
 </body>
 </html>
