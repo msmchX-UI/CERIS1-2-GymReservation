@@ -486,16 +486,6 @@
             },
             body: JSON.stringify(updateData)
           });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const apiResult = await response.json();
-          
-          if (!apiResult.success) {
-            throw new Error(apiResult.error || 'Update failed');
-          }
           
           // Wait for the update and overlap formula to be processed
           await new Promise(resolve => setTimeout(resolve, 3000));
@@ -507,10 +497,11 @@
             event.extendedProps.rowIndex === editEventId
           );
           
-          // Verify the update was successful
-          if (!updatedEvent) {
-            throw new Error('Could not verify update - please refresh the calendar');
-          }
+          // Consider it a success if we can find the updated event
+          const result = { 
+            success: !!updatedEvent,
+            error: updatedEvent ? null : 'Could not verify update'
+          };
           
           if (result.success) {
             formMsg.style.color = "green";
