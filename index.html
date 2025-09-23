@@ -3,7 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- FullCalendar CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
   <link rel="icon" type="image/png" href="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png">
  <style>
     body {
@@ -204,18 +204,18 @@
     </div>
 
   <!-- FullCalendar JS (correct version) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // Set the Google Sheet CSV export URL for your responses tab
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrFK6Wy8sKujAwFvJ0CUhdXO58yfVVvumMegEU-Xlvelqr_ooUbQzIPzPztA9mmHYaP3I03SCV7ZI4/pubhtml?gid=613712690&single=true"; // Data_filters
+    // Google Sheets URLs - using your spreadsheet ID
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
 
-    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
-    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwemB5v6LX90lcuUJ-XX0VMOABJowpr-4EGmVU-ZmUCN26MQd_8Xzdvgt8EwFpD_jgiJA/exec";
-    
+    // Google Apps Script Web App URL for updates 
+    // Replace YOUR_SCRIPT_ID_HERE with your actual Apps Script deployment ID
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
 
-    // Store data for editing
+    // Store raw data for editing
     let rawSheetData = [];
     let isEditMode = false;
     let currentCalendar = null;
@@ -223,12 +223,14 @@
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
       if (!dateString || !timeString) return null;
+      // Accepts either 'yyyy-mm-dd' or 'm/d/yyyy'
       let year, month, day;
       if (dateString.includes('-')) {
         [year, month, day] = dateString.split('-');
       } else {
         [month, day, year] = dateString.split('/');
       }
+      // If timeString is '08:00:00 AM' or '08:00 AM'
       let [time, ampm] = timeString.trim().split(' ');
       let [hour, minute, second] = time.split(':');
       hour = parseInt(hour, 10);
@@ -242,17 +244,13 @@
 
     // Used for FullCalendar events
     async function fetchEvents() {
-      console.log('Fetching events from:', GOOGLE_SHEET_CSV_URL);
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
-          console.log('Response status:', response.status);
           if (!response.ok) throw new Error("Sheet not accessible or not public");
           return response.text();
         })
         .then(csvText => {
-          console.log('CSV data received, parsing...');
           const data = Papa.parse(csvText, { header: true }).data;
-          console.log('Parsed data:', data);
           rawSheetData = data; // Store raw data for editing
           return data
             .filter(row => row["Overlap Status"] === "No Overlap")
@@ -269,7 +267,7 @@
                 : null;
               return {
                 id: index, // Add ID for identification
-                title: `${row.Event ? row.Event : "Booking"} - ${row.Name || ""} ${row.Paid ? "(PAID" + (row["OR Number"] ? ` - OR#${row["OR Number"]}` : "") + ")" : "(UNPAID)"}`,
+                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
                 start: start || dateStr,
                 end: end,
                 allDay: !start,
@@ -295,14 +293,19 @@
 
     // Overlap detection function
     function isOverlap(date, from, to, events, excludeId = null) {
+      // date: yyyy-mm-dd, time: hh:mm (24h)
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
       for (const ev of events) {
+        // Skip the event being edited
         if (excludeId !== null && ev.id === excludeId) continue;
+        
+        // Only check if dates match (ev.start like 2025-09-05T08:00:00)
         if (!ev.start || !ev.end) continue;
         if (!ev.start.startsWith(date)) continue;
         const evStart = new Date(ev.start);
         const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
+        // Overlap if (startA < endB) && (endA > startB)
         if (reqStart < evEnd && reqEnd > evStart) {
           return true;
         }
@@ -334,19 +337,20 @@
 
     // Fill form with event data for editing
     function fillFormWithEventData(eventInfo) {
-  const props = eventInfo.event.extendedProps;
-  console.log('DEBUG: Event props:', props);
-  document.getElementById('nameInput').value = props.name || '';
-  document.getElementById('eventInput').value = props.event || '';
-  document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
-  document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
-  document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
-  document.getElementById('paidInput').value = props.paid || '';
-  document.getElementById('orNumberInput').value = props.orNumber || '';
-  document.getElementById('editEventId').value = eventInfo.event.id || '';
-  document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
-  // Switch to edit mode
-  switchToEditMode();
+      const props = eventInfo.event.extendedProps;
+
+      document.getElementById('nameInput').value = props.name || '';
+      document.getElementById('eventInput').value = props.event || '';
+      document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
+      document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
+      document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
+      document.getElementById('paidInput').value = props.paid || '';
+      document.getElementById('orNumberInput').value = props.orNumber || '';
+      document.getElementById('editEventId').value = eventInfo.event.id || '';
+      document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
+
+      // Switch to edit mode
+      switchToEditMode();
     }
 
     // Switch form to edit mode
@@ -400,11 +404,11 @@
         resetToBookingMode();
       });
 
-      // Update button - CURRENTLY SHOWS DEMO MESSAGE
+      // Update button
       document.getElementById('updateBtn').addEventListener('click', async function() {
         const formMsg = document.getElementById('form-msg');
         formMsg.style.color = "orange";
-        formMsg.textContent = "Processing update...";
+        formMsg.textContent = "Updating reservation...";
 
         const form = document.getElementById('bookingForm');
         const name = form.name.value.trim();
@@ -429,16 +433,16 @@
           return;
         }
 
-        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
-        formMsg.style.color = "green";
-        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
 
-        setTimeout(() => {
-          resetToBookingMode();
-        }, 4000);
 
-        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
-        
+
+
+
+
+
+
+
+
         // Convert to 12-hour format for Google Sheets
         function to12h(time) {
           let [h, m] = time.split(":").map(Number);
@@ -490,7 +494,7 @@
           formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
           console.error('Update error:', error);
         }
-        */
+
       });
     });
 
@@ -545,13 +549,13 @@
       const tFrom = to12h(time_from);
       const tTo = to12h(time_to);
 
-      // Your Google Form POST URL
+      // Your Google Form POST URL (replace with your actual formResponse URL)
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
       formData.append("entry.1062862748", event);       // Event
-      formData.append("entry.619214382", date);         // Date
+      formData.append("entry.619214382", date);         // Date (single field, yyyy-mm-dd)
       formData.append("entry.295264701_hour", tFrom.hour);
       formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
       formData.append("entry.295264701_ampm", tFrom.ampm);
