@@ -37,7 +37,7 @@
     .calendar-footer {
       position: absolute;
       right: 16px;
-      bottom: -2.5em;
+      bottom: -2.5em; /* place below the calendar */
       font-size: 0.95em;
       color: #666;
       background: rgba(255,255,255,0.96);
@@ -75,6 +75,7 @@
       pointer-events: none;
       white-space: nowrap;
     }
+    /* Make booked events show a pointer (hand) cursor on hover */
     .fc-daygrid-event, .fc-timegrid-event {
       cursor: pointer !important;
     }
@@ -153,7 +154,7 @@
         <h2 id="form-title">Make a Reservation</h2>
         <form id="bookingForm">
           <input type="hidden" id="editEventId" name="editEventId" value="">
-          <input type="hidden" id="editRowIndex" name="editRowIndex" value="">
+          <input type="hidden" id="editRowData" name="editRowData" value="">
           <label>
             Name:<br />
             <input type="text" id="nameInput" name="name" required>
@@ -207,15 +208,18 @@
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
+    // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
     
-    // Replace with your actual Google Apps Script URL
-    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_ACTUAL_SCRIPT_ID_HERE/exec";
 
+    // Store data for editing
     let rawSheetData = [];
     let isEditMode = false;
     let currentCalendar = null;
 
+    // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
       if (!dateString || !timeString) return null;
       let year, month, day;
@@ -235,6 +239,7 @@
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
     }
 
+    // Used for FullCalendar events
     async function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
@@ -243,18 +248,22 @@
         })
         .then(csvText => {
           const data = Papa.parse(csvText, { header: true }).data;
-          rawSheetData = data;
+          rawSheetData = data; // Store raw data for editing
           return data
             .filter(row => row["Overlap Status"] === "No Overlap")
-            .filter(row => row.Date && (row["Time from"] || row["Time"]))
+            .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
             .map((row, index) => {
               let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
                 return `${m3}-${m1.padStart(2, '0')}-${m2.padStart(2, '0')}`;
               });
-              let start = row["Time from"] ? toISODate(row.Date, row["Time from"]) : null;
-              let end = (row.Date && row["Time to"]) ? toISODate(row.Date, row["Time to"]) : null;
+              let start = row["Time from"]
+                ? toISODate(row.Date, row["Time from"])
+                : null;
+              let end = (row.Date && row["Time to"])
+                ? toISODate(row.Date, row["Time to"])
+                : null;
               return {
-                id: index,
+                id: index, // Add ID for identification
                 title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
                 start: start || dateStr,
                 end: end,
@@ -279,6 +288,7 @@
         });
     }
     
+    // Overlap detection function
     function isOverlap(date, from, to, events, excludeId = null) {
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
@@ -295,8 +305,10 @@
       return false;
     }
 
+    // Keep a reference to latest events for validation
     let latestEvents = [];
 
+    // Convert time from 12-hour format to 24-hour format for input fields
     function to24h(timeStr) {
       if (!timeStr) return '';
       let [time, ampm] = timeStr.trim().split(' ');
@@ -307,6 +319,7 @@
       return `${hour.toString().padStart(2, '0')}:${minute || '00'}`;
     }
 
+    // Convert date from m/d/yyyy to yyyy-mm-dd for input fields
     function formatDateForInput(dateStr) {
       if (!dateStr) return '';
       if (dateStr.includes('-')) return dateStr;
@@ -314,6 +327,7 @@
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
 
+    // Fill form with event data for editing
     function fillFormWithEventData(eventInfo) {
       const props = eventInfo.event.extendedProps;
       
@@ -325,11 +339,13 @@
       document.getElementById('paidInput').value = props.paid || '';
       document.getElementById('orNumberInput').value = props.orNumber || '';
       document.getElementById('editEventId').value = eventInfo.event.id || '';
-      document.getElementById('editRowIndex').value = props.rowIndex || '';
+      document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
       
+      // Switch to edit mode
       switchToEditMode();
     }
 
+    // Switch form to edit mode
     function switchToEditMode() {
       isEditMode = true;
       document.getElementById('form-title').textContent = 'Edit Reservation';
@@ -339,6 +355,7 @@
       document.getElementById('cancelEditBtn').style.display = 'block';
     }
 
+    // Reset form to booking mode
     function resetToBookingMode() {
       isEditMode = false;
       document.getElementById('form-title').textContent = 'Make a Reservation';
@@ -348,7 +365,7 @@
       document.getElementById('cancelEditBtn').style.display = 'none';
       document.getElementById('bookingForm').reset();
       document.getElementById('editEventId').value = '';
-      document.getElementById('editRowIndex').value = '';
+      document.getElementById('editRowData').value = '';
       document.getElementById('form-msg').textContent = '';
     }
 
@@ -364,21 +381,26 @@
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         eventClick: function(info) {
+          // Fill form with clicked event data
           fillFormWithEventData(info);
+          
+          // Switch to day view to show the event clearly
           currentCalendar.changeView('timeGridDay', info.event.start);
           info.jsEvent.preventDefault();
         }
       });
       currentCalendar.render();
 
+      // Cancel edit button
       document.getElementById('cancelEditBtn').addEventListener('click', function() {
         resetToBookingMode();
       });
 
+      // Update button - CURRENTLY SHOWS DEMO MESSAGE
       document.getElementById('updateBtn').addEventListener('click', async function() {
         const formMsg = document.getElementById('form-msg');
         formMsg.style.color = "orange";
-        formMsg.textContent = "Updating reservation...";
+        formMsg.textContent = "Processing update...";
 
         const form = document.getElementById('bookingForm');
         const name = form.name.value.trim();
@@ -389,7 +411,6 @@
         const paid = form.paid.value;
         const ornumber = form.ornumber.value.trim();
         const editEventId = parseInt(form.editEventId.value);
-        const editRowIndex = parseInt(form.editRowIndex.value);
 
         if (!name || !event || !date || !time_from || !time_to || !paid) {
           formMsg.style.color = "red";
@@ -397,12 +418,24 @@
           return;
         }
 
+        // Check for overlap (excluding current event)
         if (isOverlap(date, time_from, time_to, latestEvents, editEventId)) {
           formMsg.style.color = "red";
           formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
           return;
         }
 
+        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
+        formMsg.style.color = "green";
+        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
+        
+        setTimeout(() => {
+          resetToBookingMode();
+        }, 4000);
+
+        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
+        
+        // Convert to 12-hour format for Google Sheets
         function to12h(time) {
           let [h, m] = time.split(":").map(Number);
           let ampm = h >= 12 ? "PM" : "AM";
@@ -411,9 +444,10 @@
           return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
         }
 
+        // Prepare update data
         const updateData = {
           action: 'update',
-          rowIndex: editRowIndex + 2, // +2 for header row
+          rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
           name: name,
           event: event,
           date: date,
@@ -424,9 +458,12 @@
         };
 
         try {
+          // Send update to Google Apps Script
           const response = await fetch(UPDATE_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify(updateData)
           });
 
@@ -434,6 +471,7 @@
             formMsg.style.color = "green";
             formMsg.textContent = "Reservation updated successfully! Calendar will refresh shortly.";
             
+            // Refresh calendar after a short delay
             setTimeout(async () => {
               latestEvents = await fetchEvents();
               currentCalendar.removeAllEvents();
@@ -448,12 +486,15 @@
           formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
           console.error('Update error:', error);
         }
+        */
       });
     });
 
+    // Booking form submission (via Google Form)
     document.getElementById('bookingForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // Don't submit if in edit mode (use Update button instead)
       if (isEditMode) {
         return;
       }
@@ -483,11 +524,13 @@
         return;
       }
     
+      // Check for overlap before submitting
       if (isOverlap(date, time_from, time_to, events)) {
         formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
         return;
       }
 
+      // Split time and convert to AM/PM for Google Forms
       function to12h(time) {
         let [h, m] = time.split(":").map(Number);
         let ampm = h >= 12 ? "PM" : "AM";
@@ -498,20 +541,21 @@
       const tFrom = to12h(time_from);
       const tTo = to12h(time_to);
 
+      // Your Google Form POST URL
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
-      formData.append("entry.1148333639", name);
-      formData.append("entry.1062862748", event);
-      formData.append("entry.619214382", date);
+      formData.append("entry.1148333639", name);        // Name
+      formData.append("entry.1062862748", event);       // Event
+      formData.append("entry.619214382", date);         // Date
       formData.append("entry.295264701_hour", tFrom.hour);
       formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
       formData.append("entry.295264701_ampm", tFrom.ampm);
       formData.append("entry.877971115_hour", tTo.hour);
       formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
       formData.append("entry.877971115_ampm", tTo.ampm);
-      formData.append("entry.40428640", paid);
-      formData.append("entry.1853220772", ornumber);
+      formData.append("entry.40428640", paid);       // Paid
+      formData.append("entry.1853220772", ornumber);       // OR Number
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
