@@ -415,16 +415,7 @@
 
     document.addEventListener('DOMContentLoaded', async function() {
       const calendarEl = document.getElementById('calendar');
-      try {
-        console.log('Initializing calendar...');
-        latestEvents = await fetchEvents();
-        console.log('Fetched events:', latestEvents);
-        if (!latestEvents || latestEvents.length === 0) {
-          console.warn('No events found or events array is empty');
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-      }
+      latestEvents = await fetchEvents();
       currentCalendar = new window.FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         events: latestEvents,
