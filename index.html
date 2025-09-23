@@ -469,28 +469,36 @@
           const updateData = {
             action: 'update',
             rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
-            name: name,
-            event: event,
-            date: date,
-            timeFrom: to12h(time_from),
-            timeTo: to12h(time_to),
-            paid: paid,
-            orNumber: ornumber
+            name: name,             // Column C
+            event: event,          // Column D
+            date: date,            // Column E
+            timeFrom: to12h(time_from), // Column F
+            timeTo: to12h(time_to),     // Column G
+            paid: paid,                  // Column H
+            orNumber: ornumber           // Column I
           };
           console.log('Sending update data:', updateData);
 
           const response = await fetch(UPDATE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(updateData)
           });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const apiResult = await response.json();
           
-          // Since no-cors mode doesn't give us access to the response,
-          // we'll wait a moment and then refresh to check if the update worked
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          if (!apiResult.success) {
+            throw new Error(apiResult.error || 'Update failed');
+          }
+          
+          // Wait for the update and overlap formula to be processed
+          await new Promise(resolve => setTimeout(resolve, 3000));
           
           // Try to fetch the latest data to verify the update
           const updatedEvents = await fetchEvents();
@@ -499,11 +507,10 @@
             event.extendedProps.rowIndex === editEventId
           );
           
-          // Consider it a success if we can find the updated event
-          const result = { 
-            success: !!updatedEvent,
-            error: updatedEvent ? null : 'Could not verify update'
-          };
+          // Verify the update was successful
+          if (!updatedEvent) {
+            throw new Error('Could not verify update - please refresh the calendar');
+          }
           
           if (result.success) {
             formMsg.style.color = "green";
