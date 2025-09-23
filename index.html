@@ -3,7 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- FullCalendar CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css">
   <link rel="icon" type="image/png" href="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png">
  <style>
     body {
@@ -204,7 +204,7 @@
     </div>
 
   <!-- FullCalendar JS (correct version) -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js"></script>
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
@@ -241,13 +241,17 @@
 
     // Used for FullCalendar events
     async function fetchEvents() {
+      console.log('Fetching events from:', GOOGLE_SHEET_CSV_URL);
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
+          console.log('Response status:', response.status);
           if (!response.ok) throw new Error("Sheet not accessible or not public");
           return response.text();
         })
         .then(csvText => {
+          console.log('CSV data received, parsing...');
           const data = Papa.parse(csvText, { header: true }).data;
+          console.log('Parsed data:', data);
           rawSheetData = data; // Store raw data for editing
           return data
             .filter(row => row["Overlap Status"] === "No Overlap")
