@@ -149,12 +149,12 @@
     <div class="booking-form-container">
       <div class="booking-form">
         <div id="form-mode" class="form-mode" style="display: none;">
-          EDIT MODE - Click on a calendar event to edit it
+          EDIT MODE - Modify the details and click Update
         </div>
         <h2 id="form-title">Make a Reservation</h2>
         <form id="bookingForm">
           <input type="hidden" id="editEventId" name="editEventId" value="">
-          <input type="hidden" id="editRowIndex" name="editRowIndex" value="">
+          <input type="hidden" id="editRowData" name="editRowData" value="">
           <label>
             Name:<br />
             <input type="text" id="nameInput" name="name" required>
@@ -211,9 +211,10 @@
     // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
 
-    // Google Apps Script Web App URL for updates (replace with your actual URL)
+    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
     const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqXMRwgTb_74e5xRF7u7gB3klbUmTAd-PlXdByRqOK9KY4OedP-b2KxaQVgg7hKbiDPQ/exec";
 
+    // Store data for editing
     let rawSheetData = [];
     let isEditMode = false;
     let currentCalendar = null;
@@ -221,14 +222,12 @@
     // Converts date and time like '9/5/2025', '8:00:00 AM' to '2025-09-05T08:00:00'
     function toISODate(dateString, timeString) {
       if (!dateString || !timeString) return null;
-      // Accepts either 'yyyy-mm-dd' or 'm/d/yyyy'
       let year, month, day;
       if (dateString.includes('-')) {
         [year, month, day] = dateString.split('-');
       } else {
         [month, day, year] = dateString.split('/');
       }
-      // If timeString is '08:00:00 AM' or '08:00 AM'
       let [time, ampm] = timeString.trim().split(' ');
       let [hour, minute, second] = time.split(':');
       hour = parseInt(hour, 10);
@@ -237,7 +236,7 @@
       hour = hour.toString().padStart(2, '0');
       minute = minute ? minute.padStart(2, '0') : '00';
       second = second ? second.padStart(2, '0') : '00';
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${seconds}`;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
     }
 
     // Used for FullCalendar events
@@ -249,7 +248,7 @@
         })
         .then(csvText => {
           const data = Papa.parse(csvText, { header: true }).data;
-          rawSheetData = data; // Store the raw data for editing
+          rawSheetData = data; // Store raw data for editing
           return data
             .filter(row => row["Overlap Status"] === "No Overlap")
             .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
@@ -264,8 +263,8 @@
                 ? toISODate(row.Date, row["Time to"])
                 : null;
               return {
-                id: index, // Add ID to identify events
-                title: (row.Event ? row.Event : "Booking") + (row.Name ? " - " + row.Name : ""),
+                id: index, // Add ID for identification
+                title: `${row.Event ? row.Event : "Booking"} - ${row.Name || ""} ${row.Paid ? "(PAID" + (row["OR Number"] ? ` - OR#${row["OR Number"]}` : "") + ")" : "(UNPAID)"}`,
                 start: start || dateStr,
                 end: end,
                 allDay: !start,
@@ -278,7 +277,7 @@
                   paid: row.Paid,
                   orNumber: row["OR Number"],
                   rowIndex: index,
-                  rawRowData: row
+                  rawData: row
                 }
               };
             });
@@ -291,19 +290,14 @@
 
     // Overlap detection function
     function isOverlap(date, from, to, events, excludeId = null) {
-      // date: yyyy-mm-dd, time: hh:mm (24h)
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
       for (const ev of events) {
-        // Skip the event being edited
         if (excludeId !== null && ev.id === excludeId) continue;
-        
-        // Only check if dates match (ev.start like 2025-09-05T08:00:00)
         if (!ev.start || !ev.end) continue;
         if (!ev.start.startsWith(date)) continue;
         const evStart = new Date(ev.start);
         const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
-        // Overlap if (startA < endB) && (endA > startB)
         if (reqStart < evEnd && reqEnd > evStart) {
           return true;
         }
@@ -314,7 +308,7 @@
     // Keep a reference to latest events for validation
     let latestEvents = [];
 
-    // Convert time from 12-hour to 24-hour format for input fields
+    // Convert time from 12-hour format to 24-hour format for input fields
     function to24h(timeStr) {
       if (!timeStr) return '';
       let [time, ampm] = timeStr.trim().split(' ');
@@ -335,20 +329,19 @@
 
     // Fill form with event data for editing
     function fillFormWithEventData(eventInfo) {
-      const props = eventInfo.event.extendedProps;
-
-      document.getElementById('nameInput').value = props.name || '';
-      document.getElementById('eventInput').value = props.event || '';
-      document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
-      document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
-      document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
-      document.getElementById('paidInput').value = props.paid || '';
-      document.getElementById('orNumberInput').value = props.orNumber || '';
-      document.getElementById('editEventId').value = eventInfo.event.id || '';
-      document.getElementById('editRowIndex').value = props.rowIndex || '';
-
-      // Switch to edit mode
-      switchToEditMode();
+  const props = eventInfo.event.extendedProps;
+  console.log('DEBUG: Event props:', props);
+  document.getElementById('nameInput').value = props.name || '';
+  document.getElementById('eventInput').value = props.event || '';
+  document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
+  document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
+  document.getElementById('timeToInput').value = to24h(props.timeTo) || '';
+  document.getElementById('paidInput').value = props.paid || '';
+  document.getElementById('orNumberInput').value = props.orNumber || '';
+  document.getElementById('editEventId').value = eventInfo.event.id || '';
+  document.getElementById('editRowData').value = JSON.stringify(props.rawData || {});
+  // Switch to edit mode
+  switchToEditMode();
     }
 
     // Switch form to edit mode
@@ -356,7 +349,6 @@
       isEditMode = true;
       document.getElementById('form-title').textContent = 'Edit Reservation';
       document.getElementById('form-mode').style.display = 'block';
-      document.getElementById('form-mode').textContent = 'EDIT MODE - Modify details and click Update';
       document.getElementById('bookBtn').style.display = 'none';
       document.getElementById('updateBtn').style.display = 'block';
       document.getElementById('cancelEditBtn').style.display = 'block';
@@ -372,7 +364,7 @@
       document.getElementById('cancelEditBtn').style.display = 'none';
       document.getElementById('bookingForm').reset();
       document.getElementById('editEventId').value = '';
-      document.getElementById('editRowIndex').value = '';
+      document.getElementById('editRowData').value = '';
       document.getElementById('form-msg').textContent = '';
     }
 
@@ -388,9 +380,10 @@
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         eventClick: function(info) {
-          // Fill the form with the clicked event data
+          // Fill form with clicked event data
           fillFormWithEventData(info);
-          // Switch to day view to show the event
+
+          // Switch to day view to show the event clearly
           currentCalendar.changeView('timeGridDay', info.event.start);
           info.jsEvent.preventDefault();
         }
@@ -402,7 +395,7 @@
         resetToBookingMode();
       });
 
-      // Update button - currently shows demo message
+      // Update button - CURRENTLY SHOWS DEMO MESSAGE
       document.getElementById('updateBtn').addEventListener('click', async function() {
         const formMsg = document.getElementById('form-msg');
         formMsg.style.color = "orange";
@@ -417,7 +410,6 @@
         const paid = form.paid.value;
         const ornumber = form.ornumber.value.trim();
         const editEventId = parseInt(form.editEventId.value);
-        const editRowIndex = parseInt(form.editRowIndex.value);
 
         if (!name || !event || !date || !time_from || !time_to || !paid) {
           formMsg.style.color = "red";
@@ -432,15 +424,15 @@
           return;
         }
 
-        // Demo message for now (replace with actual update code when ready)
+        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
         formMsg.style.color = "green";
-        formMsg.textContent = `Edit functionality ready! Row ${editRowIndex + 1} would be updated with: ${name}, ${event}, ${date}, ${time_from}-${time_to}, Paid: ${paid}, OR: ${ornumber}`;
-        
+        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
+
         setTimeout(() => {
           resetToBookingMode();
-        }, 5000);
+        }, 4000);
 
-        /* UNCOMMENT THIS WHEN YOU HAVE GOOGLE APPS SCRIPT SET UP:
+        /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
         
         // Convert to 12-hour format for Google Sheets
         function to12h(time) {
@@ -451,9 +443,10 @@
           return `${h}:${String(m).padStart(2, '0')}:00 ${ampm}`;
         }
 
+        // Prepare update data
         const updateData = {
           action: 'update',
-          rowIndex: editRowIndex + 2, // +2 for header row
+          rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
           name: name,
           event: event,
           date: date,
@@ -464,16 +457,20 @@
         };
 
         try {
+          // Send update to Google Apps Script
           const response = await fetch(UPDATE_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify(updateData)
           });
 
           if (response.ok) {
             formMsg.style.color = "green";
-            formMsg.textContent = "Reservation updated successfully!";
-
+            formMsg.textContent = "Reservation updated successfully! Calendar will refresh shortly.";
+            
+            // Refresh calendar after a short delay
             setTimeout(async () => {
               latestEvents = await fetchEvents();
               currentCalendar.removeAllEvents();
@@ -485,8 +482,8 @@
           }
         } catch (error) {
           formMsg.style.color = "red";
-          formMsg.textContent = "Update failed. Please check Google Apps Script configuration.";
-
+          formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
+          console.error('Update error:', error);
         }
         */
       });
@@ -496,7 +493,7 @@
     document.getElementById('bookingForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      // Don't submit if in edit mode
+      // Don't submit if in edit mode (use Update button instead)
       if (isEditMode) {
         return;
       }
@@ -514,7 +511,7 @@
       const ornumber = this.ornumber.value.trim();
 
       if (!name || !event || !date || !time_from || !time_to || !paid) {
-        formMsg.textContent = "Please fill out all fields.";
+        formMsg.textContent = "Please fill out all required fields.";
         return;
       }
 
@@ -543,13 +540,13 @@
       const tFrom = to12h(time_from);
       const tTo = to12h(time_to);
 
-      // Your Google Form POST URL (replace with your actual formResponse URL)
+      // Your Google Form POST URL
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
       formData.append("entry.1062862748", event);       // Event
-      formData.append("entry.619214382", date);         // Date (single field, yyyy-mm-dd)
+      formData.append("entry.619214382", date);         // Date
       formData.append("entry.295264701_hour", tFrom.hour);
       formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
       formData.append("entry.295264701_ampm", tFrom.ampm);
@@ -557,7 +554,7 @@
       formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
       formData.append("entry.877971115_ampm", tTo.ampm);
       formData.append("entry.40428640", paid);       // Paid
-      formData.append("entry.1853220772", ornumber); // OR Number
+      formData.append("entry.1853220772", ornumber);       // OR Number
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
