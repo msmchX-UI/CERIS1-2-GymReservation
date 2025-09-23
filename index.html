@@ -217,30 +217,36 @@
             Event:<br />
             <input type="text" id="eventInput" name="event" required>
           </label><br /><br />
-          <label>
-            Date:<br />
-            <input type="date" id="dateInput" name="date" required>
-          </label>
-          <label>
-            Time from:<br />
-            <input type="time" id="timeFromInput" name="time_from" required>
-          </label>
-          <label>
-            Time to:<br />
-            <input type="time" id="timeToInput" name="time_to" required>
-          </label>
-          <label>
-            Paid:<br />
-            <select id="paidInput" name="paid" required>
-              <option value="">Select</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </label>
-          <label>
-            OR Number:<br />
-            <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
-          </label><br /><br />
+          <div class="form-row">
+            <label>
+              Date:<br />
+              <input type="date" id="dateInput" name="date" required>
+            </label>
+            <label>
+              Time from:<br />
+              <input type="time" id="timeFromInput" name="time_from" required>
+            </label>
+            <label>
+              Time to:<br />
+              <input type="time" id="timeToInput" name="time_to" required>
+            </label>
+          </div>
+          
+          <div class="form-row">
+            <label>
+              Paid:<br />
+              <select id="paidInput" name="paid" required>
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+            <label>
+              OR Number:<br />
+              <input type="text" id="orNumberInput" name="ornumber" placeholder="Enter OR Number">
+            </label>
+          </div>
+          
           <div class="button-group">
             <button type="submit" id="bookBtn">Book Now</button>
             <button type="button" id="updateBtn" style="display: none;">Update</button>
