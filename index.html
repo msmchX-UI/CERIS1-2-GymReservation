@@ -469,39 +469,30 @@
           const updateData = {
             action: 'update',
             rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
-            name: name,             // Column C
-            event: event,          // Column D
-            date: date,            // Column E
-            timeFrom: to12h(time_from), // Column F
-            timeTo: to12h(time_to),     // Column G
-            paid: paid,                  // Column H
-            orNumber: ornumber           // Column I
+            name: name,
+            event: event,
+            date: date,
+            timeFrom: to12h(time_from),
+            timeTo: to12h(time_to),
+            paid: paid,
+            orNumber: ornumber
           };
           console.log('Sending update data:', updateData);
 
-          const response = await fetch(UPDATE_SCRIPT_URL, {
+          const response = await fetch(UPDATE_SCRIPT_URL + '?action=update', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            mode: 'cors',
             body: JSON.stringify(updateData)
           });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
           
-          // Wait for the update and overlap formula to be processed
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          
-          // Try to fetch the latest data to verify the update
-          const updatedEvents = await fetchEvents();
-          // Find the exact event we're updating using the row index
-          const updatedEvent = updatedEvents.find(event => 
-            event.extendedProps.rowIndex === editEventId
-          );
-          
-          // Consider it a success if we can find the updated event
-          const result = { 
-            success: !!updatedEvent,
-            error: updatedEvent ? null : 'Could not verify update'
-          };
+          const result = await response.json();
           
           if (result.success) {
             formMsg.style.color = "green";
