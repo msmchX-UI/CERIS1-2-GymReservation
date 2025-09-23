@@ -238,7 +238,7 @@
     // Set the Google Sheet CSV export URL for your responses tab
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690"; // Data_filters
     
-    // Google Apps Script Web App URL - REPLACE WITH YOUR ACTUAL SCRIPT URL
+    // Google Apps Script Web App URL - The deployed web app URL from your Google Apps Script
     const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlJDLxPzPnDsH5CzYIF_ad6FqR8qzL_wqkpjoCvp0Yj1uzRwkZa0Go55miPhPPYMrUiQ/exec";
 
     // Store data for editing
@@ -451,13 +451,54 @@
           return;
         }
 
-        // TEMPORARY: Show success message (remove this when you set up Google Apps Script)
-        formMsg.style.color = "green";
-        formMsg.textContent = "Update feature ready! Please set up Google Apps Script to enable actual updates.";
-        
-        setTimeout(() => {
-          resetToBookingMode();
-        }, 4000);
+        // Send update to Google Apps Script
+        try {
+          formMsg.style.color = "orange";
+          formMsg.textContent = "Updating reservation...";
+
+          // Log the data being sent
+          const updateData = {
+            action: 'update',
+            rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
+            name: name,
+            event: event,
+            date: date,
+            timeFrom: to12h(time_from),
+            timeTo: to12h(time_to),
+            paid: paid,
+            orNumber: ornumber
+          };
+          console.log('Sending update data:', updateData);
+
+          const response = await fetch(UPDATE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            formMsg.style.color = "green";
+            formMsg.textContent = "✅ Reservation updated successfully! Calendar will refresh shortly.";
+            
+            // Refresh calendar after a short delay
+            setTimeout(async () => {
+              latestEvents = await fetchEvents();
+              currentCalendar.removeAllEvents();
+              currentCalendar.addEventSource(latestEvents);
+              resetToBookingMode();
+            }, 2000);
+          } else {
+            throw new Error(result.error || 'Update failed');
+          }
+        } catch (error) {
+          formMsg.style.color = "red";
+          formMsg.textContent = "❌ Update failed: " + error.message;
+          console.error('Update error:', error);
+        }
 
         /* UNCOMMENT THIS SECTION WHEN YOU HAVE SET UP GOOGLE APPS SCRIPT
         
