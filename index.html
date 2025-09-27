@@ -406,7 +406,7 @@
       const props = eventInfo.event.extendedProps;
 
       document.getElementById('nameInput').value = props.name || '';
-      document.getElementById('contactnumberInput').value = props.contactnumber || '';
+      document.getElementById('contactInput').value = props.contactnumber || '';
       document.getElementById('eventInput').value = props.event || '';
       document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
       document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
@@ -479,7 +479,7 @@
 
         const form = document.getElementById('bookingForm');
         const name = form.name.value.trim();
-        const contactnumber = form.contactnumber.value.trim();
+        const contactnumber = this.contactnumber.value.trim();
         const event = form.event.value.trim();
         const date = form.date.value;
         const time_from = form.time_from.value;
@@ -488,7 +488,7 @@
         const ornumber = form.ornumber.value.trim();
         const editEventId = parseInt(form.editEventId.value);
 
-        if (!name || !event || !date || !time_from || !time_to || !paid) {
+        if (!name || !contactnumber || !event || !date || !time_from || !time_to || !paid) {
           formMsg.style.color = "red";
           formMsg.textContent = "Please fill out all required fields.";
           return;
@@ -589,7 +589,7 @@
       const paid = this.paid.value;
       const ornumber = this.ornumber.value.trim();
 
-      if (!name || !event || !date || !time_from || !time_to || !paid) {
+      if (!name || !contactnumber || !event || !date || !time_from || !time_to || !paid) {
         formMsg.textContent = "Please fill out all required fields.";
         return;
       }
