@@ -214,6 +214,10 @@
             <input type="text" id="nameInput" name="name" required>
           </label><br /><br />
           <label>
+            Contact Number  :<br />
+            <input type="tel" id="contactInput" name="contactnumber" pattern="[0-9]{10,15}" placeholder="e.g., 09171234567" required>
+          </label><br /><br />
+          <label>
             Event:<br />
             <input type="text" id="eventInput" name="event" required>
           </label><br /><br />
@@ -334,6 +338,7 @@
                 allDay: !start,
                 extendedProps: {
                   name: row.Name,
+                  contactnumber: row.contactnumber,
                   event: row.Event,
                   date: row.Date,
                   timeFrom: row["Time from"],
@@ -401,6 +406,7 @@
       const props = eventInfo.event.extendedProps;
 
       document.getElementById('nameInput').value = props.name || '';
+      document.getElementById('contactnumberInput').value = props.contactnumber || '';
       document.getElementById('eventInput').value = props.event || '';
       document.getElementById('dateInput').value = formatDateForInput(props.date) || '';
       document.getElementById('timeFromInput').value = to24h(props.timeFrom) || '';
@@ -473,6 +479,7 @@
 
         const form = document.getElementById('bookingForm');
         const name = form.name.value.trim();
+        const contactnumber = form.contactnumber.value.trim();
         const event = form.event.value.trim();
         const date = form.date.value;
         const time_from = form.time_from.value;
@@ -518,6 +525,7 @@
           action: 'update',
           rowIndex: editEventId + 2, // +2 because sheet starts at row 2 (1 is header)
           name: name,
+          contactnumber: contactnumber,
           event: event,
           date: date,
           timeFrom: to12h(time_from),
@@ -573,6 +581,7 @@
       formMsg.textContent = "Checking for schedule conflicts...";
 
       const name = this.name.value.trim();
+      const name = this.contactnumber.value.trim();
       const event = this.event.value.trim();
       const date = this.date.value;
       const time_from = this.time_from.value;
@@ -616,6 +625,7 @@
 
       const formData = new FormData();
       formData.append("entry.1148333639", name);        // Name
+      formData.append("entry.1750256259", contactnumber);        // Contact Number
       formData.append("entry.1062862748", event);       // Event
       formData.append("entry.619214382", date);         // Date (single field, yyyy-mm-dd)
       formData.append("entry.295264701_hour", tFrom.hour);
