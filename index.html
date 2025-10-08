@@ -5,41 +5,182 @@
   <!-- FullCalendar CSS -->
   <link rel="stylesheet" href="https://msmchx-ui.github.io/CERIS1-2-GymReservation/main.min.css">
   <link rel="icon" type="image/png" href="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png">
+  
   <style>
-    body { font-family: Arial, sans-serif; margin: 2em; background: #f3f3f3; }
-    #logo { display: block; margin: 0 auto 1em auto; width: 180px; height: 120px; object-fit: cover; border-radius: 8px; }
-    h1 { text-align: center; }
-    .calendar-container { position: relative; max-width: 800px; margin: 0 auto 2em auto; }
-    #calendar { background: white; padding: 1em; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 560px; }
-    .calendar-footer { position: absolute; right: 16px; bottom: -2.5em; font-size: 0.95em; color: #666; background: rgba(255,255,255,0.96); padding: 0.35em 1em; border-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); z-index: 10; pointer-events: none; white-space: nowrap; }
-    .booking-form-container { position: relative; max-width: 400px; margin: 2em auto 0 auto; }
-    .booking-form { background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); max-width: 400px; margin: 0 auto; }
-    .reservation-footer { position: absolute; right: 16px; bottom: -2em; font-size: 0.95em; color: #666; background: rgba(255,255,255,0.96); padding: 0.35em 1em; border-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); z-index: 10; pointer-events: none; white-space: nowrap; }
-    .fc-daygrid-event, .fc-timegrid-event { cursor: pointer !important; }
-    .button-group { display: flex; gap: 10px; }
-    .button-group button { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; }
-    #updateBtn { background-color: #ffa500; color: white; }
-    #updateBtn:hover { background-color: #e69400; }
-    #bookBtn { background-color: #007bff; color: white; }
-    #bookBtn:hover { background-color: #0056b3; }
-    .form-mode { margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; color: #856404; font-weight: bold; text-align: center; }
-    #cancelEditBtn { width: 100%; margin-top: 10px; padding: 8px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    #cancelEditBtn:hover { background-color: #5a6268; }
-    .fc-header-toolbar { flex-wrap: wrap !important; gap: 0.5em; justify-content: center; }
-    .fc .fc-toolbar.fc-header-toolbar { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
-    .fc-toolbar-chunk { flex: 1 1 100%; min-width: 0; display: flex; justify-content: center; }
-    @media (max-width: 600px) {
-      .fc-header-toolbar, .fc .fc-toolbar.fc-header-toolbar { flex-direction: column; align-items: stretch; }
-      .fc-toolbar-chunk { justify-content: center; margin-bottom: 0.25em; }
-      .fc-toolbar-title { font-size: 1.1em; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f3f3f3;
     }
-    .form-row { display: flex; gap: 1em; margin-bottom: 1em; }
-    .form-row > label { flex: 1 1 0; min-width: 0; }
-    @media (max-width: 600px) { .form-row { flex-direction: column; gap: 0.5em; } }
+    #logo {
+      display: block;
+      margin: 0 auto 1em auto;
+      width: 180px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .calendar-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto 2em auto;
+    }
+    #calendar {
+      background: white;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      min-height: 560px;
+    }
+    .calendar-footer {
+      position: absolute;
+      right: 16px;
+      bottom: -2.5em;
+      font-size: 0.95em;
+      color: #666;
+      background: rgba(255,255,255,0.96);
+      padding: 0.35em 1em;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .booking-form-container {
+      position: relative;
+      max-width: 400px;
+      margin: 2em auto 0 auto;
+    }
+    .booking-form {
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .reservation-footer {
+      position: absolute;
+      right: 16px;
+      bottom: -2em;
+      font-size: 0.95em;
+      color: #666;
+      background: rgba(255,255,255,0.96);
+      padding: 0.35em 1em;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .fc-daygrid-event, .fc-timegrid-event {
+      cursor: pointer !important;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #updateBtn {
+      background-color: #ffa500;
+      color: white;
+    }
+    #updateBtn:hover {
+      background-color: #e69400;
+    }
+    #bookBtn {
+      background-color: #007bff;
+      color: white;
+    }
+    #bookBtn:hover {
+      background-color: #0056b3;
+    }
+    .form-mode {
+      margin-bottom: 10px;
+      padding: 8px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      color: #856404;
+      font-weight: bold;
+      text-align: center;
+    }
+    #cancelEditBtn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #cancelEditBtn:hover {
+      background-color: #5a6268;
+    }
+    .fc-header-toolbar {
+      flex-wrap: wrap !important;
+      gap: 0.5em;
+      justify-content: center;
+    }
+    .fc .fc-toolbar.fc-header-toolbar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .fc-toolbar-chunk {
+      flex: 1 1 100%;
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+    }
+    @media (max-width: 600px) {
+      .fc-header-toolbar,
+      .fc .fc-toolbar.fc-header-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .fc-toolbar-chunk {
+        justify-content: center;
+        margin-bottom: 0.25em;
+      }
+      .fc-toolbar-title {
+        font-size: 1.1em;
+      }
+    }
+    .form-row {
+      display: flex;
+      gap: 1em;
+      margin-bottom: 1em;
+    }
+    .form-row > label {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0.5em;
+      }
+    }
   </style>
 </head>
 <body>
-  <img id="logo" src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" alt="CERIS Homeowners Association Logo" />
+  <!-- Logo section -->
+  <img 
+    id="logo" 
+    src="https://msmchx-ui.github.io/Ceris1-2-contact-search/images/chai_logo.png" 
+    alt="CERIS Homeowners Association Logo" 
+  />
   <h1 style="text-align:center;">Ceris 1 &amp; 2 Gym Booking &amp; Reservation Calendar</h1>
 
   <div class="calendar-container">
@@ -113,12 +254,18 @@
     </div>
   </div>
 
+  <!-- FullCalendar JS (correct version) -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
+    // Google Sheets URLs - using your spreadsheet ID
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1oYrnXosSSxmA0lilzNNUtdVx9if2FAY094Hf_MAXKl0/export?format=csv&gid=613712690";
-    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhZtXqmKUhFSjTR5dJq7SqZldb30YM2aiP3LV1jPWji2w_fUcQKvoGQO9EFeVW5rBB5g/exec";
 
+    // Google Apps Script Web App URL for updates 
+    const UPDATE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeMvQGIamClLZ9B1TF6knVTmQYui7mtv8of0v52_qzwBd5zZyQWctyh-hy2OEXRcCa1Q/exec";
+
+    // Store raw data for editing
     let rawSheetData = [];
     let isEditMode = false;
     let currentCalendar = null;
@@ -142,6 +289,7 @@
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour}:${minute}:${second}`;
     }
 
+    // Used for FullCalendar events
     async function fetchEvents() {
       return fetch(GOOGLE_SHEET_CSV_URL)
         .then(response => {
@@ -190,6 +338,7 @@
         });
     }
 
+    // UPDATED isOverlap function
     function isOverlap(date, from, to, events, excludeId = null, paidValue = null) {
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
@@ -202,6 +351,7 @@
         const evStart = new Date(ev.start);
         const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
         if (reqStart < evEnd && reqEnd > evStart) {
+          // Check payment status
           const evPaid = ev.extendedProps.paid;
           if (evPaid === "Yes") {
             blockDueToPaid = true;
@@ -210,9 +360,13 @@
           }
         }
       }
+
+      // If booking is paid, and only overlap is with unpaid, allow it.
       if (paidValue === "Yes" && foundUnpaidOverlap && !blockDueToPaid) {
         return false; // Allow booking
       }
+
+      // Otherwise, block if any overlap exists
       return blockDueToPaid || foundUnpaidOverlap;
     }
 
@@ -322,6 +476,7 @@
           if (paid === "Yes") {
             formMsg.style.color = "orange";
             formMsg.textContent = "Paid reservation will override unpaid schedule. Proceeding with update...";
+            // Proceed with update
           } else {
             formMsg.style.color = "red";
             formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
@@ -351,20 +506,15 @@
         };
 
         try {
-          // Only send Content-Type header!
           const response = await fetch(UPDATE_SCRIPT_URL, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify(updateData)
           });
 
-          // Don't check response.ok, parse the result for error handling
-          const respText = await response.text();
-          let respJson;
-          try { respJson = JSON.parse(respText); } catch (err) { respJson = {}; }
-          if (respJson.success) {
+          if (response.ok) {
             formMsg.style.color = "green";
             formMsg.textContent = "Reservation updated successfully! Calendar will refresh shortly.";
             setTimeout(async () => {
@@ -374,13 +524,11 @@
               resetToBookingMode();
             }, 2000);
           } else {
-            formMsg.style.color = "red";
-            formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
-            console.error('Update error:', respJson.error || respText);
+            throw new Error('Update failed');
           }
         } catch (error) {
           formMsg.style.color = "red";
-          formMsg.textContent = "Update failed. Network error or CORS issue.";
+          formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
           console.error('Update error:', error);
         }
       });
@@ -416,9 +564,11 @@
         return;
       }
 
+      // Pass paid value for overlap logic
       if (isOverlap(date, time_from, time_to, events, null, paid)) {
         if (paid === "Yes") {
           formMsg.textContent = "Paid reservation will override unpaid schedule. Proceeding with booking...";
+          // Proceed with booking
         } else {
           formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
           return;
@@ -438,21 +588,22 @@
       const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/1ue6sD7NAhlJ4P_wASW5w3Ds9bL8hyR22ya-xMLI6ijU/formResponse";
 
       const formData = new FormData();
-      formData.append("entry.1148333639", name);
-      formData.append("entry.1750256259", contactnumber);
-      formData.append("entry.1062862748", event);
-      formData.append("entry.619214382", date);
+      formData.append("entry.1148333639", name);        // Name
+      formData.append("entry.1750256259", contactnumber); // Contact Number
+      formData.append("entry.1062862748", event);       // Event
+      formData.append("entry.619214382", date);         // Date
       formData.append("entry.295264701_hour", tFrom.hour);
       formData.append("entry.295264701_minute", String(tFrom.minute).padStart(2, '0'));
       formData.append("entry.295264701_ampm", tFrom.ampm);
       formData.append("entry.877971115_hour", tTo.hour);
       formData.append("entry.877971115_minute", String(tTo.minute).padStart(2, '0'));
       formData.append("entry.877971115_ampm", tTo.ampm);
-      formData.append("entry.40428640", paid);
-      formData.append("entry.1853220772", ornumber);
+      formData.append("entry.40428640", paid);       // Paid
+      formData.append("entry.1853220772", ornumber); // OR Number
 
       fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
+        mode: "no-cors",
         body: formData
       }).then(() => {
         formMsg.style.color = "green";
