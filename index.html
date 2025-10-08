@@ -300,7 +300,6 @@
           const data = Papa.parse(csvText, { header: true }).data;
           rawSheetData = data;
           return data
-            // .filter(row => row["Overlap Status"] === "No Overlap") // REMOVE this line if column not present
             .filter(row => row.Date && (row["Time from"] || row["Time"])) // tolerate legacy/partial rows
             .map((row, index) => {
               let dateStr = row.Date.includes('-') ? row.Date : row.Date.replace(/(\d+)\/(\d+)\/(\d+)/, (m, m1, m2, m3) => {
@@ -339,9 +338,12 @@
         });
     }
 
-    function isOverlap(date, from, to, events, excludeId = null) {
+    // UPDATED isOverlap function
+    function isOverlap(date, from, to, events, excludeId = null, paidValue = null) {
       const reqStart = new Date(`${date}T${from}`);
       const reqEnd = new Date(`${date}T${to}`);
+      let blockDueToPaid = false;
+      let foundUnpaidOverlap = false;
       for (const ev of events) {
         if (excludeId !== null && ev.id === excludeId) continue;
         if (!ev.start || !ev.end) continue;
@@ -349,10 +351,23 @@
         const evStart = new Date(ev.start);
         const evEnd = ev.end ? new Date(ev.end) : new Date(ev.start);
         if (reqStart < evEnd && reqEnd > evStart) {
-          return true;
+          // Check payment status
+          const evPaid = ev.extendedProps.paid;
+          if (evPaid === "Yes") {
+            blockDueToPaid = true;
+          } else if (evPaid === "No") {
+            foundUnpaidOverlap = true;
+          }
         }
       }
-      return false;
+
+      // If booking is paid, and only overlap is with unpaid, allow it.
+      if (paidValue === "Yes" && foundUnpaidOverlap && !blockDueToPaid) {
+        return false; // Allow booking
+      }
+
+      // Otherwise, block if any overlap exists
+      return blockDueToPaid || foundUnpaidOverlap;
     }
 
     let latestEvents = [];
@@ -456,10 +471,17 @@
           return;
         }
 
-        if (isOverlap(date, time_from, time_to, latestEvents, editEventId)) {
-          formMsg.style.color = "red";
-          formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
-          return;
+        // Pass paid value for overlap logic
+        if (isOverlap(date, time_from, time_to, latestEvents, editEventId, paid)) {
+          if (paid === "Yes") {
+            formMsg.style.color = "orange";
+            formMsg.textContent = "Paid reservation will override unpaid schedule. Proceeding with update...";
+            // Proceed with update
+          } else {
+            formMsg.style.color = "red";
+            formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time.";
+            return;
+          }
         }
 
         function to12h(time) {
@@ -542,9 +564,15 @@
         return;
       }
 
-      if (isOverlap(date, time_from, time_to, events)) {
-        formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
-        return;
+      // Pass paid value for overlap logic
+      if (isOverlap(date, time_from, time_to, events, null, paid)) {
+        if (paid === "Yes") {
+          formMsg.textContent = "Paid reservation will override unpaid schedule. Proceeding with booking...";
+          // Proceed with booking
+        } else {
+          formMsg.textContent = "The selected schedule overlaps with an existing booking. Please choose a different Date/Time. Thank you!";
+          return;
+        }
       }
 
       function to12h(time) {
