@@ -1,6 +1,3 @@
-With paid override option.
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +103,13 @@ With paid override option.
     }
     #bookBtn:hover {
       background-color: #0056b3;
+    }
+    #deleteBtn {
+      background-color: #dc3545;
+      color: white;
+    }
+    #deleteBtn:hover {
+      background-color: #a71d2a;
     }
     .form-mode {
       margin-bottom: 10px;
@@ -246,6 +250,7 @@ With paid override option.
           <div class="button-group">
             <button type="submit" id="bookBtn">Book Now</button>
             <button type="button" id="updateBtn" style="display: none;">Update</button>
+            <button type="button" id="deleteBtn" style="display: none;">Delete</button>
           </div>
           <button type="button" id="cancelEditBtn" style="display: none;">Cancel Edit</button>
         </form>
@@ -414,6 +419,7 @@ With paid override option.
       document.getElementById('bookBtn').style.display = 'none';
       document.getElementById('updateBtn').style.display = 'block';
       document.getElementById('cancelEditBtn').style.display = 'block';
+      document.getElementById('deleteBtn').style.display = 'block';
     }
 
     function resetToBookingMode() {
@@ -423,6 +429,7 @@ With paid override option.
       document.getElementById('bookBtn').style.display = 'block';
       document.getElementById('updateBtn').style.display = 'none';
       document.getElementById('cancelEditBtn').style.display = 'none';
+      document.getElementById('deleteBtn').style.display = 'none';
       document.getElementById('bookingForm').reset();
       document.getElementById('editEventId').value = '';
       document.getElementById('editRowData').value = '';
@@ -533,6 +540,54 @@ With paid override option.
           formMsg.style.color = "red";
           formMsg.textContent = "Update failed. Please check if Google Apps Script is properly configured.";
           console.error('Update error:', error);
+        }
+      });
+
+      document.getElementById('deleteBtn').addEventListener('click', async function() {
+        const formMsg = document.getElementById('form-msg');
+        const editEventId = parseInt(document.getElementById('editEventId').value);
+        if (isNaN(editEventId)) {
+          formMsg.style.color = "red";
+          formMsg.textContent = "No reservation selected for deletion.";
+          return;
+        }
+        if (!confirm("Are you sure you want to delete this reservation? This action cannot be undone.")) {
+          return;
+        }
+        formMsg.style.color = "orange";
+        formMsg.textContent = "Deleting reservation...";
+
+        // Send delete request to Apps Script
+        const deleteData = {
+          action: 'delete',
+          rowIndex: editEventId + 2 // +2 to match the spreadsheet row (header + 0-based index)
+        };
+
+        try {
+          const response = await fetch(UPDATE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(deleteData)
+          });
+
+          if (response.ok) {
+            formMsg.style.color = "green";
+            formMsg.textContent = "Reservation deleted successfully! Calendar will refresh shortly.";
+            setTimeout(async () => {
+              latestEvents = await fetchEvents();
+              currentCalendar.removeAllEvents();
+              currentCalendar.addEventSource(latestEvents);
+              resetToBookingMode();
+            }, 2000);
+          } else {
+            throw new Error('Delete failed');
+          }
+        } catch (error) {
+          formMsg.style.color = "red";
+          formMsg.textContent = "Delete failed. Please check if Google Apps Script is properly configured.";
+          console.error('Delete error:', error);
         }
       });
     });
